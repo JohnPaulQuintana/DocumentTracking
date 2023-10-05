@@ -119,12 +119,68 @@
 
         <script>
             $(document).ready(function(){
+
+                function getNotification(){
+                    // Make the AJAX request with CSRF token in headers
+                    // Get the CSRF token from the hidden input field
+                    var csrfToken = $('#csrf-token').val();
+                    $.ajax({
+                        type: "GET",
+                        url: "/notification",
+                        headers: {
+                            "X-CSRF-TOKEN": csrfToken
+                        },
+                        success: function (response) {
+                            // Handle the AJAX response here
+                            console.log(response);
+                            var notifHtml = ''
+                            // Using a conditional statement
+                            if (response) {
+                                $('noti-dot').css({'display':'block'})
+                                response.notifications.forEach(notif => {
+                                    notifHtml += `
+                                        <a href="" class="text-reset notification-item">
+                                            <div class="d-flex">
+                                                <div class="avatar-xs me-3">
+                                                    <span class="avatar-title bg-success rounded-circle font-size-16">
+                                                        <i class="ri-checkbox-circle-line"></i>
+                                                    </span>
+                                                </div>
+                                                <div class="flex-1">
+                                                    <h6 class="mb-1">${notif.notification_from_name}</h6>
+                                                    <div class="font-size-12 text-muted">
+                                                        <p class="mb-1">${notif.notification_message}</p>
+                                                        <p class="mb-0"><i class="mdi mdi-clock-outline"></i> ${notif.created_at}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                        `
+                                });
+                                $('.notif-container').html(notifHtml)
+                            } else {
+                                // The response is empty or falsy
+                                console.log("Response is empty or falsy:", response);
+                                $('noti-dot').css({'display':'none'})
+                            }
+                        },
+                        error: function (error) {
+                            // Handle AJAX error here
+                            console.error(error);
+                        }
+                    });
+                }
+
+                getNotification()
+
+                // remove this later
                 $('#view-documents-btn').on('click',function(){
                     $('#view-documents').modal('show')
                     var trkId = $(this).data("trk-id");
                     $('#data-trk-id').val(trkId)
                 })
 
+                // remove this later
                 $('.forward-documents').on('click',function(){
                    
                     var dprtId = $(this).data("department-id");

@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\FileUploadController;
 use App\Http\Controllers\ModalController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\RequestedDocumentController;
 
@@ -35,7 +36,7 @@ Route::middleware(['auth', 'verified', 'roleguard'])->group(function(){
     Route::post('/updates', [RequestedDocumentController::class,'update'])->name('request.documents.update');
     Route::post('/get-logs',[RequestedDocumentController::class, 'getLogs']);
     Route::post('/request-documents-forward', [RequestedDocumentController::class,'forwardIncomingRequest'])->name('administrator.dashboard.incoming.request.forward');
-    Route::get('/departments-with-users', [RequestedDocumentController::class,'departmentAndUsers']);
+    Route::get('/departments-with-users/{id}', [RequestedDocumentController::class,'departmentAndUsers']);
 });
 
 // Route::get('/department', [DepartmentController::class,'dashboard'])->middleware(['auth', 'verified'])->name('departments.dashboard');
@@ -49,6 +50,8 @@ Route::middleware(['auth', 'verified','roleguard'])->group(function(){
 });
 
 Route::middleware('auth')->group(function () {
+    // notification
+    Route::get('/notification',[NotificationController::class,'getNotification'])->name('notify');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

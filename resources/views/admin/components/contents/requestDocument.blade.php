@@ -109,6 +109,7 @@
                                 </tr>
                             </thead><!-- end thead -->
                             <tbody>
+                                {{-- {{ $documents }} --}}
                                 @foreach ($documents as $document)
                                     {{-- {{ $document }} --}}
                                     <tr data-status="{{ $document['status'] }}">
@@ -140,7 +141,7 @@
                                         <td width="50px">
                                             <span class="">
                                                 @if ($document['status'] !== 'pending' && $document['status'] !== 'archived' && $document['status'] !== 'finished')
-                                                    <a class="ri-map-pin-line text-white font-size-18 btn btn-danger p-2 pin-document-btn" data-trk="{{ $document['trk_id'] }}" data-id="{{ $document['document_id'] }}" data-document-id="{{ $document['documents'] }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Forward Document"></a>
+                                                    <a class="ri-map-pin-line text-white font-size-18 btn btn-danger p-2 pin-document-btn" data-trk="{{ $document['trk_id'] }}" data-id="{{ $document['document_id'] }}" data-document-id="{{ $document['documents'] }}" data-office-id="{{ $document['corporate_office']['office_id'] }}"  data-bs-toggle="tooltip" data-bs-placement="top" title="Forward Document"></a>
                                                 @endif
                                                 <a class="ri-eye-line text-white font-size-18 btn btn-info p-2 view-document-btn" data-trk="{{ $document['trk_id'] }}" data-id="{{ $document['document_id'] }} }}" data-document-id="{{ $document['documents'] }}" data-bs-toggle="tooltip" data-bs-placement="top" title="View Document"></a>
                                                 <a id="scan-document-btn" class="ri-camera-line text-white font-size-18 btn btn-success p-2" data-office-id="2" data-bs-toggle="tooltip" data-bs-placement="top" title="Scan Document"></a>
@@ -283,6 +284,8 @@
                     var trkId = $(this).data('trk')//trk_id
                     var documentId = parseInt($(this).data('id'))//documents id
                     var document = $(this).data('document-id')//documents
+                    var officeId = $(this).data('office-id')//documents
+
                     console.log(trkId, documentId, document)
 
                     $('.trkNo').text(trkId)
@@ -290,10 +293,11 @@
                     $('.doc-id').val(documentId)
                     $('.doc').val(document)
                     $('.trk').val(trkId)
+
                     var departementHtml = ''
                     var departementUsersHtml = ``
             
-                    getDepartmentWithUsers()
+                    getDepartmentWithUsers(officeId)
                         .then(function(response) {
                             // Process the response (logs) here
                             // console.log(response.departmentWithUsers);
@@ -475,13 +479,13 @@
                 }
 
                 // process request for all departments and users
-                function getDepartmentWithUsers() {
+                function getDepartmentWithUsers(office_id) {
                     // alert(id);
                     // Return a promise
                     return new Promise(function(resolve, reject) {
                         // Make an AJAX request to retrieve logs
                         $.ajax({
-                            url: '/departments-with-users', // Replace with your route URL
+                            url: `/departments-with-users/${office_id}`, // Replace with your route URL
                             type: 'GET',
                             headers: {
                                 'X-CSRF-TOKEN': "{{ csrf_token() }}"

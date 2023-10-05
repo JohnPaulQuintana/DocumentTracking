@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Log;
 use App\Models\Office;
 use App\Events\NotifyEvent;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use App\Models\RequestedDocument;
 use Illuminate\Support\Facades\DB;
@@ -183,6 +184,21 @@ class RequestedDocumentController extends Controller
             ]);
             
             $documentLogs->save();
+
+            // explode the department abbr
+            // $dept = explode(' | ',$request->input('department'));
+
+            // get the office of requestor
+            $requestorOffice = Office::where('id',$documentRequest->requestor)->first();
+            // get the cred from office
+            $notification = new Notification([
+                'notification_from_id' => auth()->user()->id,
+                'notification_from_name' => auth()->user()->name,
+                'notification_to_id' => 1,//by default admin
+                'notification_message'=>auth()->user()->name.' from '.$requestorOffice['office_name'].' Has forwarded a document!',
+                'notification_status'=>'unread',
+            ]);
+            $notification->save();
             event(new NotifyEvent('departments sending a documents'));
             // Save the image timestamp in the database
             // $imageModel = new Image();
@@ -215,37 +231,6 @@ class RequestedDocumentController extends Controller
         // Redirect back with a success message and the inserted products
         return back()->with('notification', $notificationJson);
 
-        // Create a new RequestedDocument instance with default values
-        // $documentRequest = new RequestedDocument([
-        //     'trk_id' => $this->generateTRKID(),
-        //     'requested_by' => auth()->user()->id, // Assuming you want to associate with the logged-in user
-        //     'requested_to' => 1, // Set the default value for requested_to
-        //     'description' => $request->input('request-text'),
-        //     'status' => 'forwarded', // Set the default status
-        // ]);
-
-        // Create a new RequestedDocument instance with default values
-        // $documentLogs = new Log([
-        //     'trk_id' => $documentRequest->trk_id,
-        //     'requested_by' => $documentRequest->requested_by, // Assuming you want to associate with the logged-in user
-        //     'requested_to' => $documentRequest->requested_to, // Set the default value for requested_to
-        //     'description' => $documentRequest->description,
-        //     'status' => $documentRequest->status, // Set the default status
-        // ]);
-
-        // Save the document to the database
-        // $documentRequest->save();
-        // $documentLogs->save();
-
-        // $logs = Log::where('requested_by', Auth::user()->id)->get();
-        // Format the created_at timestamps as "year-month-day"
-        // $logs = $logs->map(function ($log) {
-        //     $log->formatted_created_at = $log->created_at->format('Y-m-d');
-        //     return $log;
-        // });
-
-        // Optionally, you can return a response here (e.g., success message or redirect)
-        // return redirect()->back();
     }
 
     // get the logs
@@ -312,12 +297,14 @@ class RequestedDocumentController extends Controller
     }
 
     //get all departements and users
-    public function departmentAndUsers(){
+    public function departmentAndUsers($id){
+        // dd($id);
+        $excludedOfficeIds = [$id, 1];
         // Retrieve all departments and their users
         $departmentWithUsers = DB::table('offices')
         ->leftJoin('users', 'offices.id', '=', 'users.office_id')
         ->select('offices.*', 'users.name as user_name', 'users.email as user_email', 'users.id as user_id','users.office_id as user_office_id')
-        ->where('offices.id', '!=', 1)
+        ->whereNotIn('offices.id', $excludedOfficeIds)
         ->get();
         // Group the results by user name using Laravel collection's groupBy method
         $usersWithOffices = $departmentWithUsers->groupBy('user_name');
@@ -376,6 +363,7 @@ class RequestedDocumentController extends Controller
          return $uniqueId;
     }
     
+    // format documents
     function formatDocumentsWithLogs($documents)
     {
         return $documents->map(function ($document) {
