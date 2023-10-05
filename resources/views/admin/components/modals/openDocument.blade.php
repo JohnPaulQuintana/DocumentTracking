@@ -10,6 +10,7 @@
                         <button type="button" id="close-modal" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
+                        <h5 class="text-center">Tracking No. - <span class="text-primary" id="trkNo">TRK-12345678</span></h5>
                         <div class="row">
                             <input type="hidden" id="csrf-token" value="{{ csrf_token() }}">
                             <input type="number" name="id" id="doc-id" value="" hidden>
@@ -33,7 +34,7 @@
                         </div> <!-- end row -->
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-success waves-effect">Approved</button>
+                        <button type="submit" class="btn btn-success waves-effect" id="btn-approved">Approved</button>
                         <button type="submit" class="btn btn-danger waves-effect waves-light">Archived</button>
                     </div>
                 </div><!-- /.modal-content -->

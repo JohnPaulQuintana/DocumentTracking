@@ -40,7 +40,7 @@
                                                     <div class="col-6" style="margin: auto;">
                                                         <div class="mb-2 text-center">
                                                             <h4 class="card-title">Forward to:</h4>
-                                                            <select id="department-select" class="form-select" aria-label="Default select example">
+                                                            <select id="department-select" name="department" class="form-select" aria-label="Default select example">
                                                                 <option selected>Select a department</option>
                                                                 
                                                             </select>

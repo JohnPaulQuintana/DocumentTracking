@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class RequestedDocument extends Model
 {
     use HasFactory;
-    protected $fillable = ['trk_id','requestor', 'forwarded_to','purpose','recieved_offices','documents','status'];
+    protected $fillable = ['trk_id','requestor','requestor_user', 'forwarded_to','purpose','recieved_offices','documents','status'];
    
     /**
      * Define a one-to-many relationship with the Log model.
@@ -20,9 +20,9 @@ class RequestedDocument extends Model
         return $this->hasMany(Log::class, 'requested_document_id');
     }
 
-    // public function Offices()
-    // {
-    //     return $this->hasMany(Office::class, 'recieved_offices');
-    // }
+    public function office()
+    {
+        return $this->belongsTo(Office::class, 'requestor', 'id');
+    }
 
 }

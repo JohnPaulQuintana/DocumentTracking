@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->integer('role')->default(0);//means user
             $table->string('department')->nullable();//means user
-            $table->string('office_id');//means user
+            $table->bigInteger('office_id');//means user
             $table->string('status');
         });
     }

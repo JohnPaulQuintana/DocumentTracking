@@ -33,6 +33,9 @@ Route::middleware(['auth', 'verified', 'roleguard'])->group(function(){
     Route::get('/offices-user/{office_id}', [OfficeController::class,'showOfficesUser'])->name('administrator.dashboard.offices.user');
     Route::post('/user-add', [OfficeController::class,'addUsers'])->name('administrator.dashboard.user.add');
     Route::post('/updates', [RequestedDocumentController::class,'update'])->name('request.documents.update');
+    Route::post('/get-logs',[RequestedDocumentController::class, 'getLogs']);
+    Route::post('/request-documents-forward', [RequestedDocumentController::class,'forwardIncomingRequest'])->name('administrator.dashboard.incoming.request.forward');
+    Route::get('/departments-with-users', [RequestedDocumentController::class,'departmentAndUsers']);
 });
 
 // Route::get('/department', [DepartmentController::class,'dashboard'])->middleware(['auth', 'verified'])->name('departments.dashboard');

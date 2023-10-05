@@ -115,7 +115,9 @@
 
             var channel = pusher.subscribe('update-dashboard');
             channel.bind('initialize-dashboard', function(data) {
-            alert(JSON.stringify(data));
+            console.log(JSON.stringify(data));
+                // Reload the page when the event is received
+                window.location.reload();
             });
         </script>
 

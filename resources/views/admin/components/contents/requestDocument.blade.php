@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
     <meta content="Themesdesign" name="author" />
+    <meta name="csrf-token" content="{{ csrf_token() }}"> <!-- Include the CSRF token in the head section -->
     <!-- App favicon -->
     <link rel="shortcut icon" href="{{ asset('assets/images/favicon.ico') }}">
 
@@ -78,7 +79,7 @@
                 <div class="card-body">
 
                     <div class="dropdown float-end">
-                        <a href="#" class="dropdown-toggle arrow-none card-drop" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="dropdown-toggle arrow-none card-drop" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="mdi mdi-dots-vertical"></i>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end">
@@ -87,9 +88,11 @@
                     </div>
 
                     <h4 class="card-title mb-4">
-                        Request List
-                        <a href="#" class="text-white font-size-13 btn btn-warning p-1"  data-bs-toggle="tooltip" data-bs-placement="top" title="On-going Document">On-going</a>
-                        <a href="#" class="text-white font-size-13 btn btn-danger p-1"  data-bs-toggle="tooltip" data-bs-placement="top" title="Archieved Document">Archived</a>
+                        <span class="me-2">Request List</span>
+                        <a class="filter-button text-white font-size-13 btn btn-warning p-1" data-filter="on-going"  data-bs-toggle="tooltip" data-bs-placement="top" title="On-going Document">On-going</a>
+                        <a class="filter-button text-white font-size-13 btn btn-danger p-1" data-filter="archived" data-bs-toggle="tooltip" data-bs-placement="top" title="Archieved Document">Archived</a>
+                        <a class="filter-button text-white font-size-13 btn btn-warning p-1" data-filter="pending" data-bs-toggle="tooltip" data-bs-placement="top" title="Pending Document">Pending</a>
+                        <a class="filter-button text-white font-size-13 btn btn-success p-1" data-filter="success" data-bs-toggle="tooltip" data-bs-placement="top" title="Finished Document">Finished</a>
                     </h4>
                     {{-- {{ $logs }} --}}
                     <div class="table-responsive">
@@ -100,20 +103,15 @@
                                     <th>Document</th>
                                     <th>Purpose</th>
                                     <th>Office (Requestor)</th>
-                                    {{-- <th>Received Offices</th> --}}
                                     <th>Status</th>
                                     <th>Date Created</th>
                                     <th>Action</th>
                                 </tr>
                             </thead><!-- end thead -->
                             <tbody>
-                                {{-- {{ $officeNames }} --}}
-                                {{-- @php
-                                     $badges = []
-                                @endphp --}}
                                 @foreach ($documents as $document)
                                     {{-- {{ $document }} --}}
-                                    <tr>
+                                    <tr data-status="{{ $document['status'] }}">
                                         <td>
                                             @switch($document['trk_id'])
                                                 @case(null)
@@ -127,39 +125,25 @@
                                         </td>
                                         <td>
                                             <i class="far fa-file-alt fa-3x"></i> <!-- Larger document icon -->
+                                            <a class="position-relative track-document" data-id="{{ $document['document_id'] }}" data-trk="{{ $document['trk_id'] }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Track document...">
+                                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"><b>+</b></span>
+                                            </a>
                                         </td>
-                                        {{-- for now id muna --}}
-                                        {{-- <td>{{ $document['requestor'] }}</td> --}}
                                         <td>{{ $document['purpose'] }}</td>
                                         <td>
                                             {{ $document['corporate_office']['office_name'] }}
                                             <span class="badge bg-info p-1"><b>{{ $document['corporate_office']['office_abbrev'] }}</b></span>
-                                            {{-- @php
-                                                // $badges = ['BGA', 'BGB', 'BGX', 'BGC', 'BGI', 'BGK']; // Replace this with your data
-                                                
-                                                $badges[] = $document['corporate_office']['office_abbrev'];
-                                                $maxBadgesToShow = 3;
-                                                $remainingBadges = count($badges) - $maxBadgesToShow;
-                                                $uniqueId = uniqid(); // Generate a unique ID for the badge container
-                                            @endphp
-                                            <div id="{{ $uniqueId }}">
-                                                @for ($i = 0; $i < min($maxBadgesToShow, count($badges)); $i++)
-                                                    <span class="badge bg-info p-1"><b>{{ $badges[$i] }}</b></span>
-                                                @endfor
-    
-                                                @if ($remainingBadges > 0)
-                                                    <a href="#" class="position-relative" data-bs-toggle="tooltip" data-bs-placement="top" title="+{{ $remainingBadges }} more...">
-                                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"><b>+{{ $remainingBadges }}</b></span>
-                                                    </a>
-                                                @endif
-                                            </div> --}}
+                                            
                                         </td>
                                         <td><span class="badge bg-warning p-2"><b>{{ $document['status'] }}</b></span></td>
                                         <td><b>{{ $document['created_at'] }}</b></td>
                                         <td width="50px">
                                             <span class="">
-                                                <a href="#" id="view-document-btn" class="ri-eye-line text-white font-size-18 btn btn-info p-2 view-document-btn" data-id="{{ $document['document_id'] }} }}" data-document-id="{{ $document['documents'] }}" data-bs-toggle="tooltip" data-bs-placement="top" title="View Document"></a>
-                                                <a href="#" id="scan-document-btn" class="ri-camera-line text-white font-size-18 btn btn-success p-2" data-office-id="2" data-bs-toggle="tooltip" data-bs-placement="top" title="Scan Document"></a>
+                                                @if ($document['status'] !== 'pending' && $document['status'] !== 'archived' && $document['status'] !== 'finished')
+                                                    <a class="ri-map-pin-line text-white font-size-18 btn btn-danger p-2 pin-document-btn" data-trk="{{ $document['trk_id'] }}" data-id="{{ $document['document_id'] }}" data-document-id="{{ $document['documents'] }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Forward Document"></a>
+                                                @endif
+                                                <a class="ri-eye-line text-white font-size-18 btn btn-info p-2 view-document-btn" data-trk="{{ $document['trk_id'] }}" data-id="{{ $document['document_id'] }} }}" data-document-id="{{ $document['documents'] }}" data-bs-toggle="tooltip" data-bs-placement="top" title="View Document"></a>
+                                                <a id="scan-document-btn" class="ri-camera-line text-white font-size-18 btn btn-success p-2" data-office-id="2" data-bs-toggle="tooltip" data-bs-placement="top" title="Scan Document"></a>
                                             </span>
                                         </td>
                                     </tr>
@@ -178,6 +162,10 @@
     {{-- @include('departments.components.modals.requestDocument') --}}
     {{-- open document modal --}}
     @include('admin.components.modals.openDocument')
+    {{-- open timeline modal --}}
+    @include('admin.components.modals.timeline')
+    {{-- open pin modal --}}
+    @include('admin.components.modals.pin')
 @endsection
 
 @section('script')
@@ -246,6 +234,24 @@
                 //     });
                 // })
 
+                // Handle button click
+                $(".filter-button").click(function() {
+                    var filter = $(this).data("filter");
+                    
+                    // Show all rows initially
+                    $("tbody tr").show();
+                    
+                    // Hide rows that don't match the filter
+                    if (filter !== "All") {
+                        $("tbody tr").each(function() {
+                            var status = $(this).find("td:eq(4)").text(); // Assuming status is in the 5th column (index 4)
+                            if (status !== filter) {
+                                $(this).hide();
+                            }
+                        });
+                    }
+                });
+
                 // documents open
                 $('.view-document-btn').on('click', function(){
                     $('#open-document-modal').modal({
@@ -253,16 +259,172 @@
                         keyboard: false
                     })
 
-                    $('#open-document-modal').modal('show')
+                    
                         const baseUrls = `${window.location.protocol}//${window.location.hostname}:${window.location.port}`;
                         var docPath = $(this).data("document-id");
                         var id = parseInt($(this).data("id"));
+                        var trkId = $(this).data("trk");
+                        if(trkId == ''){
+                            trkId = 'Pending Approval'
+                        }else{
+                            $('#btn-approved').css({'display':'none'})
+                        }
                          // Construct the full URL to the document
                         var fullDocUrl = `${baseUrls}/storage/documents/` + docPath;
                         // Set the src attribute of the iframe in the modal
                         $('#preview-doc').attr('src', fullDocUrl);
                         $('#doc-id').val(id)
+                        $('#trkNo').html(trkId)
+                        $('#open-document-modal').modal('show')
                 })
+
+                // pin open
+                $('.pin-document-btn').on('click',function(){
+                    var trkId = $(this).data('trk')//trk_id
+                    var documentId = parseInt($(this).data('id'))//documents id
+                    var document = $(this).data('document-id')//documents
+                    console.log(trkId, documentId, document)
+
+                    $('.trkNo').text(trkId)
+                    $('.timestamp-placeholder').text(document)
+                    $('.doc-id').val(documentId)
+                    $('.doc').val(document)
+                    $('.trk').val(trkId)
+                    var departementHtml = ''
+                    var departementUsersHtml = ``
+            
+                    getDepartmentWithUsers()
+                        .then(function(response) {
+                            // Process the response (logs) here
+                            // console.log(response.departmentWithUsers);
+                            response.departmentWithUsers.forEach(data => {
+                                console.log(data)
+                                //office_id | office_name | office_abbrev
+                                departementHtml += `
+                                    <option value='${data.offices[0].office_id} | ${data.offices[0].office_name} | ${data.offices[0].office_abbrev}'>
+                                        ${data.offices[0].office_name}
+                                    </option>`
+                                //User id | user_office_id | name
+                                departementUsersHtml += `
+                                    <option value='${data.user_id} | ${data.user_office_id} | ${data.user_name}'>
+                                        ${data.user_name}
+                                    </option>
+                                `
+                            });
+                            $('#department-select').html(departementHtml)
+
+                            $('#department-staff-select').html(departementUsersHtml)
+
+                        })
+                        .catch(function(err){
+                            console.log(err)
+                        })
+                    
+                        // Attach event listeners to both selects
+                        $('#department-select').on('change', function() {
+                                // const selectedDepartment = $(this).val();
+                                const selectedDepartmentOfficeId = $(this).val().split(' | ')[0];
+                                console.log(selectedDepartmentOfficeId)
+
+                                // Clear the options in #department-staff-select
+    
+
+                                // Iterate through all options in #department-staff-select
+                                $('#department-staff-select option').each(function() {
+                                    const departmentUserOfficeId = $(this).val().split(' | ')[1];
+
+                                    if (departmentUserOfficeId == selectedDepartmentOfficeId) {
+                                        // If the user's office matches the selected department, display the option
+                                        $(this).prop('disabled', false);
+                                        $(this).show();
+                                        $(this).removeAttr('selected');
+                                        
+                                    } else {
+                                        // Otherwise, disable the option
+                                        $(this).prop('disabled', true);
+                                        $(this).hide();
+                                    }
+                                });
+                        });
+                    
+                        $('#pin-document-modal').modal('show')
+                })
+
+                // tracking documents
+                $('.track-document').on('click',function(){
+                    $('#timeline-modal').modal({
+                        backdrop: 'static',
+                        keyboard: false
+                    })
+
+                    var trackNo = $(this).data("trk");
+                    var trackId = $(this).data("id");
+                    var timelineHtml = ''
+                    var timelineTrk = ''
+                    var className = ''
+                    // alert(trackNo);
+                    if (trackNo != '') {
+                        // Usage example
+                        getLogs(trackId,trackNo)
+                            .then(function(response) {
+                                // Process the response (logs) here
+                                console.log(response);
+                                response.logs.forEach(log => {
+                                    // Split the value into parts
+                                    var parts = log.current_location.split('|');
+                                    timelineTrk = log.trk_id;
+
+                                    switch (log.status) {
+                                        case 'pending':
+                                            className = 'text-warning'
+                                            break;
+                                        case 'on-going':
+                                            className = 'text-warning'
+                                            break;
+                                        case 'archived':
+                                            className = 'text-danger'
+                                            break;
+                                    
+                                        default:
+                                            break;
+                                    }
+                                    timelineHtml += 
+                                        `
+                                        <div class="cd-timeline-block">
+                                            <div class="cd-timeline-img cd-success">
+                                                <i class="mdi mdi-adjust"></i>
+                                            </div>
+
+                                            <div class="cd-timeline-content text-center" style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;">
+                                                <p class="text-info">Received by</p>
+                                                <p class="mb-0 text-muted font-14" style="margin-top: -15px;">
+                                                    ${parts[1]}
+                                                    <span class="badge bg-info p-1"><b>${parts[0]}</b></span>
+                                                </p>
+                                                <hr />
+                                                <p class="mb-0 font-10 text-secondary text-center">${log.notes}</p>
+                                                <hr />
+                                                <p class="mb-0 font-14 ${className} text-center">${log.status} status</p>
+                                                <span style="margin-top: -10px;" class="cd-date">${log.time_sent}</span>
+                                                <span style="margin-top: 7px;" class="cd-date">${log.time_spent}</span>  
+                                            </div>
+                                        </div>
+                                        `
+                                });
+                                $('#cd-timeline').html(timelineHtml)
+                                $('#trk-timeline').html(timelineTrk)
+                                $('#timeline-modal').modal('show')
+                            })
+                            .catch(function(error) {
+                                // Handle any errors here
+                                console.error(error);
+                            });
+
+                    }else{
+                        showalert('warning',"'This document's is in pending state. no history available!")
+                    }
+                })
+
                 // When the file input changes
                 $("#image").change(function () {
                     readTimestamp(this);
@@ -283,6 +445,80 @@
                     $("#image").val(""); // Clear the file input
                     $("#image-preview").hide(); // Hide the image preview container
                 });
+
+                // process request for logs
+                function getLogs(id,trk) {
+                    // alert(id);
+                    // Return a promise
+                    return new Promise(function(resolve, reject) {
+                        // Make an AJAX request to retrieve logs
+                        $.ajax({
+                            url: '/get-logs', // Replace with your route URL
+                            type: 'POST',
+                            data: {
+                                trk: trk, // Include any additional data you need to send
+                                id: id,
+                            },
+                            headers: {
+                                'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                            },
+                            success: function(response) {
+                                // Resolve the promise with the response
+                                resolve(response);
+                            },
+                            error: function(xhr, status, error) {
+                                // Reject the promise with an error
+                                reject(xhr.responseText);
+                            }
+                        });
+                    });
+                }
+
+                // process request for all departments and users
+                function getDepartmentWithUsers() {
+                    // alert(id);
+                    // Return a promise
+                    return new Promise(function(resolve, reject) {
+                        // Make an AJAX request to retrieve logs
+                        $.ajax({
+                            url: '/departments-with-users', // Replace with your route URL
+                            type: 'GET',
+                            headers: {
+                                'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                            },
+                            success: function(response) {
+                                // Resolve the promise with the response
+                                resolve(response);
+                            },
+                            error: function(xhr, status, error) {
+                                // Reject the promise with an error
+                                reject(xhr.responseText);
+                            }
+                        });
+                    });
+                }
+
+                // custom alert
+                function showalert(stats,message){
+                    toastr.options = {
+                    "closeButton": false,
+                    "debug": false,
+                    "newestOnTop": false,
+                    "progressBar": false,
+                    "positionClass": "toast-top-right",
+                    "preventDuplicates": false,
+                    "onclick": null,
+                    "showDuration": 300,
+                    "hideDuration": 1000,
+                    "timeOut": 5000,
+                    "extendedTimeOut": 1000,
+                    "showEasing": "swing",
+                    "hideEasing": "linear",
+                    "showMethod": "fadeIn",
+                    "hideMethod": "fadeOut"
+                    };
+                    toastr[stats](message);
+                }
             })
         </script>
         {{-- // notification --}}

@@ -90,6 +90,7 @@
                     <h4 class="card-title mb-4">Request List</h4>
                     {{-- {{ $logs }} --}}
                     <div class="table-responsive">
+                       
                         <table class="table table-centered mb-0 align-middle table-hover table-nowrap">
                             <thead class="table-light">
                                 <tr>
@@ -108,7 +109,7 @@
                                      $badges = []
                                 @endphp
                                 @foreach ($documents as $document)
-                                    {{-- {{ $document }} --}}
+                                    {{-- {{ $document['logs'] }} --}}
                                     <tr>
                                         <td>
                                             @switch($document['trk_id'])
@@ -124,7 +125,7 @@
                                         {{-- for now id muna --}}
                                         <td>
                                             <i class="far fa-file-alt fa-3x"></i> <!-- Larger document icon -->
-                                            <a href="#" class="position-relative track-document" data-bs-toggle="tooltip" data-bs-placement="top" title="Track document...">
+                                            <a class="position-relative track-document" data-id="{{ $document['document_id'] }}" data-trk="{{ $document['trk_id'] }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Track document...">
                                                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"><b>+</b></span>
                                             </a>
                                         </td>
@@ -132,17 +133,20 @@
                                         <td>
                                             @php
                                                 // $badges = ['BGA', 'BGB', 'BGX', 'BGC', 'BGI', 'BGK']; // Replace this with your data
+                                                $partAbbr = explode(' | ', $document['logs']);
                                                 
-                                                $badges[] = $document['corporate_office']['office_abbrev'];
+                                                $uniqueBadges = array_unique($partAbbr);
                                                 $maxBadgesToShow = 3;
                                                 $remainingBadges = count($badges) - $maxBadgesToShow;
                                                 $uniqueId = uniqid(); // Generate a unique ID for the badge container
                                             @endphp
                                             <div id="{{ $uniqueId }}">
-                                                @for ($i = 0; $i < min($maxBadgesToShow, count($badges)); $i++)
-                                                    <span class="badge bg-info p-1"><b>{{ $badges[$i] }}</b></span>
-                                                @endfor
-    
+                                                @foreach ($uniqueBadges as $badge)
+                                                    @if ($loop->index < $maxBadgesToShow)
+                                                        <span class="badge bg-info p-1"><b>{{ $badge }}</b></span>
+                                                    @endif
+                                                @endforeach
+                                        
                                                 @if ($remainingBadges > 0)
                                                     <a href="#" class="position-relative" data-bs-toggle="tooltip" data-bs-placement="top" title="+{{ $remainingBadges }} more...">
                                                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"><b>+{{ $remainingBadges }}</b></span>
@@ -154,8 +158,8 @@
                                         <td><b>{{ $document['created_at'] }}</b></td>
                                         <td width="50px">
                                             <span class="">
-                                                <a href="#" id="view-document-btn" class="ri-eye-line text-white font-size-18 btn btn-info p-2" data-document-id="{{ $document['documents'] }}" data-bs-toggle="tooltip" data-bs-placement="top" title="View Document"></a>
-                                                <a href="#" id="scan-document-btn" class="ri-camera-line text-white font-size-18 btn btn-success p-2" data-office-id="2" data-bs-toggle="tooltip" data-bs-placement="top" title="Scan Document"></a>
+                                                <a id="view-document-btn" class="ri-eye-line text-white font-size-18 btn btn-info p-2 view-document-btn" data-document-id="{{ $document['documents'] }}" data-bs-toggle="tooltip" data-bs-placement="top" title="View Document"></a>
+                                                <a id="scan-document-btn" class="ri-camera-line text-white font-size-18 btn btn-success p-2" data-office-id="2" data-bs-toggle="tooltip" data-bs-placement="top" title="Scan Document"></a>
                                             </span>
                                         </td>
                                     </tr>
@@ -230,7 +234,7 @@
                     console.log(departmentJson)
                     var html = ''
                     departmentJson.forEach(department => {
-                        html += `<option value="${department.office_name}">${department.office_name}</option>`
+                        html += `<option value="${department.office_abbrev} | ${department.office_name}">${department.office_name}</option>`
                     });
 
                     // var trkId = $(this).data("trk-id");
@@ -244,17 +248,83 @@
                     });
                 })
 
+                // tracking documents
                 $('.track-document').on('click',function(){
                     $('#timeline-modal').modal({
                         backdrop: 'static',
                         keyboard: false
                     })
 
-                    $('#timeline-modal').modal('show')
+                    var trackNo = $(this).data("trk");
+                    var trackId = $(this).data("id");
+                    var timelineHtml = ''
+                    var timelineTrk = ''
+                    var className = ''
+                    // alert(trackNo);
+                    if (trackNo != '') {
+                        // Usage example
+                        getLogs(trackId,trackNo)
+                            .then(function(response) {
+                                // Process the response (logs) here
+                                console.log(response);
+                                response.logs.forEach(log => {
+                                    // Split the value into parts
+                                    var parts = log.current_location.split('|');
+                                    timelineTrk = log.trk_id;
+
+                                    switch (log.status) {
+                                        case 'pending':
+                                            className = 'text-warning'
+                                            break;
+                                        case 'on-going':
+                                            className = 'text-warning'
+                                            break;
+                                        case 'archived':
+                                            className = 'text-danger'
+                                            break;
+                                    
+                                        default:
+                                            break;
+                                    }
+                                    timelineHtml += 
+                                        `
+                                        <div class="cd-timeline-block">
+                                            <div class="cd-timeline-img cd-success">
+                                                <i class="mdi mdi-adjust"></i>
+                                            </div>
+
+                                            <div class="cd-timeline-content text-center" style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;">
+                                                <p class="text-info">Received</p>
+                                                <p class="mb-0 text-muted font-14" style="margin-top: -15px;">
+                                                    ${parts[1]}
+                                                    <span class="badge bg-info p-1"><b>${parts[0]}</b></span>
+                                                </p>
+                                                <hr />
+                                                <p class="mb-0 font-10 text-secondary text-center">${log.notes}</p>
+                                                <hr />
+                                                <p class="mb-0 font-14 ${className} text-center">${log.status} status</p>
+                                                <span style="margin-top: -10px;" class="cd-date">${log.time_sent}</span>
+                                                <span style="margin-top: 7px;" class="cd-date">${log.time_spent}</span>  
+                                            </div>
+                                        </div>
+                                        `
+                                });
+                                $('#cd-timeline').html(timelineHtml)
+                                $('#trk-timeline').html(timelineTrk)
+                                $('#timeline-modal').modal('show')
+                            })
+                            .catch(function(error) {
+                                // Handle any errors here
+                                console.error(error);
+                            });
+
+                    }else{
+                        showalert('warning',"'This document's is in pending state. no history available!")
+                    }
                 })
 
                 // documents open
-                $('#view-document-btn').on('click', function(){
+                $('.view-document-btn').on('click', function(){
                     $('#open-document-modal').modal({
                         backdrop: 'static',
                         keyboard: false
@@ -288,6 +358,55 @@
                     $("#image").val(""); // Clear the file input
                     $("#image-preview").hide(); // Hide the image preview container
                 });
+
+                // process request for logs
+                function getLogs(id,trk) {
+                    // alert(id);
+                    // Return a promise
+                    return new Promise(function(resolve, reject) {
+                        // Make an AJAX request to retrieve logs
+                        $.ajax({
+                            url: '/get-logs', // Replace with your route URL
+                            type: 'POST',
+                            data: {
+                                trk: trk, // Include any additional data you need to send
+                                id: id,
+                            },
+                            headers: {
+                                'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                            },
+                            success: function(response) {
+                                // Resolve the promise with the response
+                                resolve(response);
+                            },
+                            error: function(xhr, status, error) {
+                                // Reject the promise with an error
+                                reject(xhr.responseText);
+                            }
+                        });
+                    });
+                }
+                // custom alert
+                function showalert(stats,message){
+                    toastr.options = {
+                    "closeButton": false,
+                    "debug": false,
+                    "newestOnTop": false,
+                    "progressBar": false,
+                    "positionClass": "toast-top-right",
+                    "preventDuplicates": false,
+                    "onclick": null,
+                    "showDuration": 300,
+                    "hideDuration": 1000,
+                    "timeOut": 5000,
+                    "extendedTimeOut": 1000,
+                    "showEasing": "swing",
+                    "hideEasing": "linear",
+                    "showMethod": "fadeIn",
+                    "hideMethod": "fadeOut"
+                    };
+                    toastr[stats](message);
+                }
             })
         </script>
         {{-- // notification --}}

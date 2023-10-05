@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('requested_documents', function (Blueprint $table) {
             $table->id();
             $table->string('trk_id')->unique()->nullable();//treacking id generated
-            $table->bigInteger('requestor');//id of sender
+            $table->foreignId('requestor');//id of sender
+            $table->foreignId('requestor_user');//id of sender
             $table->bigInteger('forwarded_to')->default(1);//id of reciever default is direct to admin
             $table->string('purpose');//purpose
             $table->bigInteger('recieved_offices');//purpose

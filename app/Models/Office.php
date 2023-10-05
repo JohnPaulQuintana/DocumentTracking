@@ -19,4 +19,17 @@ class Office extends Model
     {
         return $this->belongsTo(RequestedDocument::class, 'recieved_offices');
     }
+
+    public function requestedDocuments()
+    {
+        return $this->hasMany(RequestedDocument::class, 'requestor', 'id');
+    }
+
+    public function users()
+    {
+        return $this->hasMany(User::class, 'office_id');
+    }
+
+   
+
 }

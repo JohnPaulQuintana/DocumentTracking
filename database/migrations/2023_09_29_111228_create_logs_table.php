@@ -14,8 +14,9 @@ return new class extends Migration
         Schema::create('logs', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('requested_document_id'); // Foreign key
-            $table->bigInteger('forwarded_to');//id of departments forwarded
-            $table->bigInteger('current_location');
+            $table->string('trk_id')->nullable();//tracking no
+            $table->string('forwarded_to');//id of departments forwarded
+            $table->string('current_location');
             $table->string('notes');
             $table->string('status');
             $table->timestamps();

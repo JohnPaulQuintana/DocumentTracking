@@ -36,7 +36,7 @@
                     <span>Offices</span>
                 </a>
             </li>
-            <li>
+            {{-- <li>
                 <a id="send-documents-btn" class="waves-effect">
                     <i class="ri-dashboard-line waves-effect waves-light"></i>
                     <span>Send Document</span>
@@ -47,7 +47,7 @@
                     <i class="ri-dashboard-line waves-effect waves-light"></i>
                     <span>Document Progress</span>
                 </a>
-            </li>
+            </li> --}}
 
             
 
