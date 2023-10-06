@@ -54,6 +54,15 @@
             height: 65px;
             /* border: 1px solid red; */
         }
+
+        @media print {
+            .modal-content.print-mode * {
+                display: none !important;
+            }
+            .modal-content.print-mode .printable-content * {
+                display: block !important;
+            }
+        }
     </style>
 @endsection
 
@@ -109,7 +118,11 @@
                                      $badges = []
                                 @endphp
                                 @foreach ($documents as $document)
-                                    {{-- {{ $document['logs'] }} --}}
+                                    {{-- {{ $document['type'] }} --}}
+                                    @php
+                                        $trk = $document['trk_id'];
+                                        // dd($trk); // Check the value of $trkId
+                                    @endphp
                                     <tr>
                                         <td>
                                             @switch($document['trk_id'])
@@ -118,7 +131,24 @@
                                                     @break
                                         
                                                 @default
-                                                    <h6 class="mb-0"><i class="ri-checkbox-blank-circle-fill font-size-10 text-success align-middle me-2"></i>{{ $document['trk_id'] }}</h6>
+                                                    <h6 class="mb-0 position-relative">
+                                                        {!! DNS1D::getBarcodeHTML("579503", 'PHARMA') !!}
+                                                        @switch($document['type'])
+                                                            @case('my document')
+                                                            {{-- for barcodes --}}
+                                                            <i class="ri-checkbox-blank-circle-fill font-size-10 text-success align-middle me-2"></i>
+                                                                TRK-{{ $document['trk_id'] }}
+                                                                <span class="position-absolute bottom-50 left-100 translate-middle badge bg-info">
+                                                                    {{ $document['type'] }}
+                                                                </span>
+                                                                @break
+                                                            @case('requested')
+                                                                <span class="position-absolute bottom-50 left-100 translate-middle badge bg-danger">
+                                                                    {{ $document['type'] }}
+                                                                </span>
+                                                                @break
+                                                        @endswitch
+                                                    </h6>
                                                     @break
                                             @endswitch
                                         </td>
@@ -128,6 +158,7 @@
                                             <a class="position-relative track-document" data-id="{{ $document['document_id'] }}" data-trk="{{ $document['trk_id'] }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Track document...">
                                                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"><b>+</b></span>
                                             </a>
+                                    
                                         </td>
                                         <td>{{ $document['purpose'] }}</td>
                                         <td>
@@ -158,6 +189,13 @@
                                         <td><b>{{ $document['created_at'] }}</b></td>
                                         <td width="50px">
                                             <span class="">
+                                                @if ($document['type'] !== 'my document')
+                                                    <a class="ri-map-pin-line text-white font-size-18 btn btn-danger p-2 pin-document-btn" data-trk="{{ $document['trk_id'] }}" data-id="{{ $document['document_id'] }}" data-document-id="{{ $document['documents'] }}" data-office-id="{{ $document['corporate_office']['office_id'] }}"  data-bs-toggle="tooltip" data-bs-placement="top" title="Forward Document"></a>
+                                                @endif
+                                                {{-- for barcodes --}}
+                                                @if ($document['type'] === 'my document')
+                                                    <a class="ri-barcode-line text-white font-size-18 btn btn-dark p-2 barcode-document-btn" data-trk="{{ $document['trk_id'] }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Print Barcode"></a>
+                                                @endif
                                                 <a id="view-document-btn" class="ri-eye-line text-white font-size-18 btn btn-info p-2 view-document-btn" data-document-id="{{ $document['documents'] }}" data-bs-toggle="tooltip" data-bs-placement="top" title="View Document"></a>
                                                 <a id="scan-document-btn" class="ri-camera-line text-white font-size-18 btn btn-success p-2" data-office-id="2" data-bs-toggle="tooltip" data-bs-placement="top" title="Scan Document"></a>
                                             </span>
@@ -180,6 +218,10 @@
     @include('departments.components.modals.openDocument')
     {{-- timeline modal --}}
     @include('departments.components.modals.timeline')
+    {{-- open pin modal --}}
+    @include('departments.components.modals.pin')
+    {{-- open print modal --}}
+    @include('departments.components.modals.print')
 @endsection
 
 @section('script')
@@ -270,17 +312,28 @@
                                 response.logs.forEach(log => {
                                     // Split the value into parts
                                     var parts = log.current_location.split('|');
-                                    timelineTrk = log.trk_id;
-
+                                
+                                    if(log.trk_id !== null){
+                                        timelineTrk = log.trk_id;
+                                    }
                                     switch (log.status) {
                                         case 'pending':
-                                            className = 'text-warning'
+                                            className = 'bg-warning text-white'
                                             break;
                                         case 'on-going':
-                                            className = 'text-warning'
+                                            className = 'bg-warning text-white'
+                                            break;
+                                        case 'forwarded':
+                                            className = 'bg-warning text-white'
+                                            break;
+                                        case 'approved':
+                                            className = 'bg-info text-white'
+                                            break;
+                                        case 'success':
+                                            className = 'bg-success text-white'
                                             break;
                                         case 'archived':
-                                            className = 'text-danger'
+                                            className = 'bg-danger text-white'
                                             break;
                                     
                                         default:
@@ -293,8 +346,8 @@
                                                 <i class="mdi mdi-adjust"></i>
                                             </div>
 
-                                            <div class="cd-timeline-content text-center" style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;">
-                                                <p class="text-info">Received</p>
+                                            <div class="cd-timeline-content text-center ${log.bgclass}" style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;">
+                                                <p class="text-info">Document</p>
                                                 <p class="mb-0 text-muted font-14" style="margin-top: -15px;">
                                                     ${parts[1]}
                                                     <span class="badge bg-info p-1"><b>${parts[0]}</b></span>
@@ -302,9 +355,10 @@
                                                 <hr />
                                                 <p class="mb-0 font-10 text-secondary text-center">${log.notes}</p>
                                                 <hr />
-                                                <p class="mb-0 font-14 ${className} text-center">${log.status} status</p>
-                                                <span style="margin-top: -10px;" class="cd-date">${log.time_sent}</span>
-                                                <span style="margin-top: 7px;" class="cd-date">${log.time_spent}</span>  
+                                                <p class="mb-0 font-14 ${className} text-center border rounded">${log.status} status</p>
+                                                <h2 style="margin-top: -10px;" class="cd-date text-center ${log.class}">${log.now}</h2>
+                                                <span style="margin-top: 10px;" class="cd-date text-center">${log.time_sent}</span>
+                                                <span style="margin-top: 30px;" class="cd-date">${log.time_spent}</span>  
                                             </div>
                                         </div>
                                         `
@@ -338,6 +392,146 @@
                         // Set the src attribute of the iframe in the modal
                         $('#preview-doc').attr('src', fullDocUrl);
                 })
+
+                // pin open
+                $('.pin-document-btn').on('click',function(){
+                    $('#pin-document-modal').modal({
+                        backdrop: 'static',
+                        keyboard: false
+                    })
+
+                    var trkId = $(this).data('trk')//trk_id
+                    var documentId = parseInt($(this).data('id'))//documents id
+                    var document = $(this).data('document-id')//documents
+                    var officeId = $(this).data('office-id')//documents
+
+                    console.log(trkId, documentId, document)
+
+                    $('.trkNo').text(trkId)
+                    $('.timestamp-placeholder').text(document)
+                    $('.doc-id').val(documentId)
+                    $('.doc').val(document)
+                    $('.trk').val(trkId)
+
+                    var departementHtml = ''
+                    var departementUsersHtml = ``
+            
+                    getDepartmentWithUsers(officeId)
+                        .then(function(response) {
+                            // Process the response (logs) here
+                            // console.log(response.departmentWithUsers);
+                            response.departmentWithUsers.forEach(data => {
+                                console.log(data)
+                                //office_id | office_name | office_abbrev
+                                departementHtml += `
+                                    <option value='${data.offices[0].office_id} | ${data.offices[0].office_name} | ${data.offices[0].office_abbrev}'>
+                                        ${data.offices[0].office_name}
+                                    </option>`
+                                //User id | user_office_id | name
+                                departementUsersHtml += `
+                                    <option value='${data.user_id} | ${data.user_office_id} | ${data.user_name}'>
+                                        ${data.user_name}
+                                    </option>
+                                `
+                            });
+                            $('.department-select').html(departementHtml)
+
+                            $('#department-staff-select').html(departementUsersHtml)
+
+                        })
+                        .catch(function(err){
+                            console.log(err)
+                        })
+                    
+                        // Attach event listeners to both selects
+                        $('#department-select').on('change', function() {
+                                // const selectedDepartment = $(this).val();
+                                const selectedDepartmentOfficeId = $(this).val().split(' | ')[0];
+                                console.log(selectedDepartmentOfficeId)
+
+                                // Clear the options in #department-staff-select
+    
+
+                                // Iterate through all options in #department-staff-select
+                                $('#department-staff-select option').each(function() {
+                                    const departmentUserOfficeId = $(this).val().split(' | ')[1];
+
+                                    if (departmentUserOfficeId == selectedDepartmentOfficeId) {
+                                        // If the user's office matches the selected department, display the option
+                                        $(this).prop('disabled', false);
+                                        $(this).show();
+                                        $(this).removeAttr('selected');
+                                        
+                                    } else {
+                                        // Otherwise, disable the option
+                                        $(this).prop('disabled', true);
+                                        $(this).hide();
+                                    }
+                                });
+                        });
+                    
+                        $('#pin-document-modal').modal('show')
+                })
+
+                //print open
+                $('.barcode-document-btn').on('click',function(){
+                    $('#print-barcode-modal').modal({
+                        backdrop: 'static',
+                        keyboard: false
+                    })
+
+                    var trk = $(this).data('trk')
+                    getDetailsForPrinting(trk)
+                        .then(function(response){
+                            console.log(response)
+                            var dataHtml = ''
+                            response.records.forEach((record) => {
+                                dataHtml += `
+                                    <div id="barcodeContainer" class="mb-2">
+                                        <span class="text-primary mb-2" style="display: flex; justify-content: center; align-items: center;">
+                                            ${ record.barcode }
+                                        </span>
+                                        <span class="text-primary" style="font-size:16px;">TRK-${record.trk_id}</span>
+                                    </div>
+                                    <hr>
+                                    <h5>
+                                        Date Created</br>
+                                        <span class="text-secondary mb-2" style="font-size:14px;">${record.formatted_created_at}</span>    
+                                    </h5>
+
+                                    <h5>
+                                        Date Approved</br>
+                                        <span class="text-secondary mb-2" style="font-size:14px;">${record.formatted_updated_at}</span>
+                                    </h5>
+
+                                    <h5>
+                                        Department</br>
+                                        <span class="text-secondary barcode-department mb-2" style="font-size:14px;">${record.department}</span>
+                                    </h5>
+                                    
+                                    <h5>
+                                        Account</br>
+                                        <span class="text-secondary barcode-user" style="font-size:14px;">${record.user_name}</span>
+                                    </h5>
+                                    
+                                `
+                            });
+                            $('.credentials').html(dataHtml)
+                            
+                            $('#btn-print').on('click',function(){
+                                // var printableContent = $('.printable-content')
+                                 // Apply a class to hide the rest of the page during printing
+                                // $('body').addClass('print-mode');
+                                window.print();
+                                // $('body').removeClass('print-mode');
+                            })
+                        })
+                        .catch(function(error){
+                            console.log(error)
+                        })
+                    $('#print-barcode-modal').modal('show')
+                })
+
                 // When the file input changes
                 $("#image").change(function () {
                     readTimestamp(this);
@@ -386,6 +580,57 @@
                         });
                     });
                 }
+
+                // process request for all departments and users
+                function getDepartmentWithUsers(office_id) {
+                    // alert(id);
+                    // Return a promise
+                    return new Promise(function(resolve, reject) {
+                        // Make an AJAX request to retrieve logs
+                        $.ajax({
+                            url: `/departments-with-users/${office_id}`, // Replace with your route URL
+                            type: 'GET',
+                            headers: {
+                                'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                            },
+                            success: function(response) {
+                                // Resolve the promise with the response
+                                resolve(response);
+                            },
+                            error: function(xhr, status, error) {
+                                // Reject the promise with an error
+                                reject(xhr.responseText);
+                            }
+                        });
+                    });
+                }
+
+                // get details for printing
+                function getDetailsForPrinting(trk){
+                    // Return a promise
+                    return new Promise(function(resolve, reject) {
+                        // Make an AJAX request to retrieve logs
+                        $.ajax({
+                            url: '/get-barcode', // Replace with your route URL
+                            type: 'GET',
+                            data: {
+                                trk: trk, // Include any additional data you need to send
+                            },
+                            headers: {
+                                'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                            },
+                            success: function(response) {
+                                // Resolve the promise with the response
+                                resolve(response);
+                            },
+                            error: function(xhr, status, error) {
+                                // Reject the promise with an error
+                                reject(xhr.responseText);
+                            }
+                        });
+                    });
+                }
+
                 // custom alert
                 function showalert(stats,message){
                     toastr.options = {

@@ -4,6 +4,8 @@
     <head>
         
         @yield('head')
+        <!-- Scripts -->
+        @vite(['resources/js/app.js'])
 
     </head>
 
@@ -101,24 +103,30 @@
 
         <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
         <script>
-
-            // Enable pusher logging - don't include this in production
-            Pusher.logToConsole = true;
-
-            var pusher = new Pusher('60b56d1ff7cab3fbbbee', {
-            cluster: 'ap1'
-            });
-
-            var channel = pusher.subscribe('update-dashboard');
-            channel.bind('initialize-dashboard', function(data) {
-                console.log(JSON.stringify(data));
-                // Reload the page when the event is received
-                window.location.reload();
-            });
-        </script>
-
-        <script>
             $(document).ready(function(){
+
+                 // custom popups
+                function notifyPopUps(message){
+                    // Set Toastr options
+                    toastr.options = {
+                            "closeButton": false,
+                            "debug": false,
+                            "newestOnTop": false,
+                            "progressBar": false,
+                            "positionClass": "toast-top-right",
+                            "preventDuplicates": false,
+                            "onclick": null,
+                            "showDuration": 300,
+                            "hideDuration": 1000,
+                            "timeOut": 5000,
+                            "extendedTimeOut": 1000,
+                            "showEasing": "swing",
+                            "hideEasing": "linear",
+                            "showMethod": "fadeIn",
+                            "hideMethod": "fadeOut"
+                        };
+                        toastr['info'](message);
+                }
 
                 function getNotification(){
                     // Make the AJAX request with CSRF token in headers
@@ -135,19 +143,17 @@
                             console.log(response);
                             var notifHtml = ''
                             // Using a conditional statement
-                            if (response) {
+                            if (response.notifications.length > 0) {
                                 $('noti-dot').css({'display':'block'})
                                 response.notifications.forEach(notif => {
+                                    notifyPopUps(`You have a notification from ${notif.notification_from_name}`)
                                     notifHtml += `
                                         <a href="" class="text-reset notification-item">
                                             <div class="d-flex">
-                                                <div class="avatar-xs me-3">
-                                                    <span class="avatar-title bg-success rounded-circle font-size-16">
-                                                        <i class="ri-checkbox-circle-line"></i>
-                                                    </span>
-                                                </div>
+                                                <img src="{{ asset('assets/images/users/default-user.png') }}"
+                                                    class="me-3 rounded-circle avatar-xs" alt="user-pic">
                                                 <div class="flex-1">
-                                                    <h6 class="mb-1">${notif.notification_from_name}</h6>
+                                                    <h6 class="mb-1 text-primary">${notif.notification_from_name}</h6>
                                                     <div class="font-size-12 text-muted">
                                                         <p class="mb-1">${notif.notification_message}</p>
                                                         <p class="mb-0"><i class="mdi mdi-clock-outline"></i> ${notif.created_at}</p>
@@ -161,7 +167,7 @@
                             } else {
                                 // The response is empty or falsy
                                 console.log("Response is empty or falsy:", response);
-                                $('noti-dot').css({'display':'none'})
+                                $('.noti-dot').css({'display':'none'})
                             }
                         },
                         error: function (error) {
@@ -170,52 +176,95 @@
                         }
                     });
                 }
-
                 getNotification()
+                // Enable pusher logging - don't include this in production
+                Pusher.logToConsole = true;
 
-                // remove this later
-                $('#view-documents-btn').on('click',function(){
-                    $('#view-documents').modal('show')
-                    var trkId = $(this).data("trk-id");
-                    $('#data-trk-id').val(trkId)
-                })
+                var pusher = new Pusher('60b56d1ff7cab3fbbbee', {
+                cluster: 'ap1'
+                });
 
-                // remove this later
-                $('.forward-documents').on('click',function(){
-                   
-                    var dprtId = $(this).data("department-id");
-                    var trk = $('#data-trk-id').val();
+                var channel = pusher.subscribe('update-dashboard');
+                channel.bind('initialize-dashboard', function(data) {
+                    console.log(JSON.stringify(data));
+                    // Reload the page when the event is received
+                    getNotification()
+                    window.location.reload();
+                });
 
-                    var data = {
-                        'trk_id': trk,
-                        'department_id':dprtId,
-                    }
-                     // Get the CSRF token from the hidden input field
-                    var csrfToken = $('#csrf-token').val();
+            
 
-                    // Make the AJAX request with CSRF token in headers
-                    $.ajax({
-                        type: "POST",
-                        url: "/updates",
-                        data: data,
-                        headers: {
-                            "X-CSRF-TOKEN": csrfToken
-                        },
-                        success: function (response) {
-                            // Handle the AJAX response here
-                            console.log(response);
-                        },
-                        error: function (error) {
-                            // Handle AJAX error here
-                            console.error(error);
-                        }
-                    });
-                    
-                })
+            // // remove this later
+            // $('#view-documents-btn').on('click',function(){
+            //     $('#view-documents').modal('show')
+            //     var trkId = $(this).data("trk-id");
+            //     $('#data-trk-id').val(trkId)
+            // })
 
+            // // remove this later
+            // $('.forward-documents').on('click',function(){
+            
+            //     var dprtId = $(this).data("department-id");
+            //     var trk = $('#data-trk-id').val();
+
+            //     var data = {
+            //         'trk_id': trk,
+            //         'department_id':dprtId,
+            //     }
+            //     // Get the CSRF token from the hidden input field
+            //     var csrfToken = $('#csrf-token').val();
+
+            //     // Make the AJAX request with CSRF token in headers
+            //     $.ajax({
+            //         type: "POST",
+            //         url: "/updates",
+            //         data: data,
+            //         headers: {
+            //             "X-CSRF-TOKEN": csrfToken
+            //         },
+            //         success: function (response) {
+            //             // Handle the AJAX response here
+            //             console.log(response);
+            //         },
+            //         error: function (error) {
+            //             // Handle AJAX error here
+            //             console.error(error);
+            //         }
+            //     });
+                
+            // })
 
             })
         </script>
+
+        @if (session()->has('notification'))
+            <script>
+                $(document).ready(function() {
+                    // Set Toastr options
+                    toastr.options = {
+                        "closeButton": false,
+                        "debug": false,
+                        "newestOnTop": false,
+                        "progressBar": false,
+                        "positionClass": "toast-top-right",
+                        "preventDuplicates": false,
+                        "onclick": null,
+                        "showDuration": 300,
+                        "hideDuration": 1000,
+                        "timeOut": 5000,
+                        "extendedTimeOut": 1000,
+                        "showEasing": "swing",
+                        "hideEasing": "linear",
+                        "showMethod": "fadeIn",
+                        "hideMethod": "fadeOut"
+                    };
+                    var notificationJson = {!! json_encode(session('notification')) !!};
+                    var notification = JSON.parse(notificationJson);
+                    console.log(notification)
+                    toastr[notification.status](notification.message);
+                });
+            </script>
+        @endif
     </body>
 
 </html>

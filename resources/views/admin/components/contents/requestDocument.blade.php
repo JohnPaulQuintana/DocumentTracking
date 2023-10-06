@@ -89,7 +89,7 @@
 
                     <h4 class="card-title mb-4">
                         <span class="me-2">Request List</span>
-                        <a class="filter-button text-white font-size-13 btn btn-warning p-1" data-filter="on-going"  data-bs-toggle="tooltip" data-bs-placement="top" title="On-going Document">On-going</a>
+                        <a class="filter-button text-white font-size-13 btn btn-warning p-1" data-filter="forwarded"  data-bs-toggle="tooltip" data-bs-placement="top" title="On-going Document">On-going</a>
                         <a class="filter-button text-white font-size-13 btn btn-danger p-1" data-filter="archived" data-bs-toggle="tooltip" data-bs-placement="top" title="Archieved Document">Archived</a>
                         <a class="filter-button text-white font-size-13 btn btn-warning p-1" data-filter="pending" data-bs-toggle="tooltip" data-bs-placement="top" title="Pending Document">Pending</a>
                         <a class="filter-button text-white font-size-13 btn btn-success p-1" data-filter="success" data-bs-toggle="tooltip" data-bs-placement="top" title="Finished Document">Finished</a>
@@ -113,14 +113,17 @@
                                 @foreach ($documents as $document)
                                     {{-- {{ $document }} --}}
                                     <tr data-status="{{ $document['status'] }}">
-                                        <td>
+                                        <td class="text-center">
                                             @switch($document['trk_id'])
                                                 @case(null)
                                                     <h6 class="mb-0"><i class="ri-checkbox-blank-circle-fill font-size-10 text-warning align-middle me-2"></i>{{ __('Pending') }}</h6>
                                                     @break
                                         
                                                 @default
-                                                    <h6 class="mb-0"><i class="ri-checkbox-blank-circle-fill font-size-10 text-success align-middle me-2"></i>{{ $document['trk_id'] }}</h6>
+                                                    <h6 class="mb-0">
+                                                        {!! DNS1D::getBarcodeHTML("579503", 'PHARMA') !!}
+                                                        <i class="ri-checkbox-blank-circle-fill font-size-10 text-success align-middle me-2"></i>
+                                                        TRK-{{ $document['trk_id'] }}</h6>
                                                     @break
                                             @endswitch
                                         </td>
@@ -140,7 +143,7 @@
                                         <td><b>{{ $document['created_at'] }}</b></td>
                                         <td width="50px">
                                             <span class="">
-                                                @if ($document['status'] !== 'pending' && $document['status'] !== 'archived' && $document['status'] !== 'finished')
+                                                @if ($document['status'] !== 'pending' && $document['status'] !== 'archived' && $document['status'] !== 'finished' && $document['status'] !== 'forwarded')
                                                     <a class="ri-map-pin-line text-white font-size-18 btn btn-danger p-2 pin-document-btn" data-trk="{{ $document['trk_id'] }}" data-id="{{ $document['document_id'] }}" data-document-id="{{ $document['documents'] }}" data-office-id="{{ $document['corporate_office']['office_id'] }}"  data-bs-toggle="tooltip" data-bs-placement="top" title="Forward Document"></a>
                                                 @endif
                                                 <a class="ri-eye-line text-white font-size-18 btn btn-info p-2 view-document-btn" data-trk="{{ $document['trk_id'] }}" data-id="{{ $document['document_id'] }} }}" data-document-id="{{ $document['documents'] }}" data-bs-toggle="tooltip" data-bs-placement="top" title="View Document"></a>
