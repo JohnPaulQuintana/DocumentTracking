@@ -116,7 +116,7 @@
                             "newestOnTop": false,
                             "progressBar": false,
                             "positionClass": "toast-top-right",
-                            "preventDuplicates": false,
+                            "preventDuplicates": true,
                             "onclick": null,
                             "showDuration": 300,
                             "hideDuration": 1000,
@@ -127,6 +127,8 @@
                             "showMethod": "fadeIn",
                             "hideMethod": "fadeOut"
                         };
+                        // Clear any existing toastr notifications
+                        // toastr.clear();
                         toastr['info'](message);
             }
             function getNotification(){

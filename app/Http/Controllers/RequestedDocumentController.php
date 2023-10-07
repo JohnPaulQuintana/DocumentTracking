@@ -28,6 +28,15 @@ class RequestedDocumentController extends Controller
             ->orderBy('requested_documents.created_at', 'desc') // Order by 'created_at' column in descending order (latest to oldest)
             ->get();
 
+            $documents = $documents->map(function ($item) {
+                $item->scanned = false;
+                return $item;
+            });
+            // onwer of documents
+            $documents = $documents->map(function ($item) {
+                $item->current_location = $item->office_abbrev. ' | ' .$item->office_name;
+                return $item;
+            });
         // Now, you can join the Log table with the requested_documents table on the requested_document_id
         // Call the function to format documents with logs
         $documentsWithLogs = $this->formatDocumentsWithLogs('my document',$documents);
@@ -36,12 +45,18 @@ class RequestedDocumentController extends Controller
         //for the forwarded documents for this user
         $forwardedDocuments = DB::table('logs')
             ->select('logs.*', 'requested_documents.*', 'offices.id as office_id', 'offices.office_name', 'offices.office_abbrev', 'offices.office_head')
-            ->leftJoin('requested_documents', 'requested_documents.trk_id', '=', 'logs.trk_id' )
-            ->leftJoin('offices', 'logs.forwarded_to', '=', 'offices.id' )
-            ->whereIn('logs.forwarded_to',[Auth::user()->office_id])
+            ->leftJoin('requested_documents', 'requested_documents.trk_id', '=', 'logs.trk_id')
+            ->leftJoin('offices', 'logs.forwarded_to', '=', 'offices.id')
+            ->whereIn('logs.forwarded_to', [Auth::user()->office_id])
             ->where('requested_documents.requestor_user', '!=', Auth::user()->id) //not the Auth user
+            ->whereIn('logs.created_at', function ($query) {
+                $query->select(DB::raw('MAX(created_at)'))
+                    ->from('logs')
+                    ->groupBy('trk_id');
+            })
             ->orderBy('logs.created_at', 'desc') // Order by 'created_at' column in descending order (latest to oldest)
             ->get();
+
 
             
         $forwardedDocumentsWithLogs = $this->formatDocumentsWithLogs('requested',$forwardedDocuments);    
@@ -124,7 +139,8 @@ class RequestedDocumentController extends Controller
             'requested_document_id' => $updatedRecords[0]->id,
             'forwarded_to' => $office->id, // department id
             'current_location' => $office->office_abbrev. ' | ' .$office->office_name, // current loaction  department abbrev
-            'notes' => 'default notes',//if the have a notes
+            'notes' => 'Waiting for the documents to arrived',//if the have a notes
+            'notes_user' => 'false',//if the have a notes
             'status' => $updatedRecords[0]->status, // Set the on-going status
             'scanned' => true,
         ]);
@@ -198,7 +214,6 @@ class RequestedDocumentController extends Controller
                 'recieved_offices' => 1,//administrator
                 'documents' => $imageName,
                 'status' => 'pending', // Set the default status
-                'scanned'=>false,
             ]);
 
             $documentRequest->save();
@@ -208,7 +223,8 @@ class RequestedDocumentController extends Controller
                 'requested_document_id' => $documentRequest->id,
                 'forwarded_to' => $documentRequest->forwarded_to, // department id
                 'current_location' => $request->input('department'), // current loaction  department abbrev
-                'notes' => 'default notes',
+                'notes' => 'requesting for approval',
+                'notes_user' => 'false',
                 'status' => $documentRequest->status, // Set the default status
                 'scanned'=>false,
             ]);
@@ -338,6 +354,7 @@ class RequestedDocumentController extends Controller
             'forwarded_to' => $partsDepartment[0], // department id
             'current_location' => $partsDepartment[2]. ' | ' .$partsDepartment[1], // current loaction  department abbrev
             'notes' => 'Documents is forwarded to '.$partsDepartment[1].'. Accounts '.$partsDepartmentStaff[2],//if the have a notes
+            'notes_user' => $request->filled('notes') ? $request->input('notes') : 'false',
             'status' => 'forwarded', // Set the default status
             'scanned' => true, // Set the default status
         ]);  
@@ -431,6 +448,59 @@ class RequestedDocumentController extends Controller
 
     }
 
+    // recieved documents
+    public function recievedDocument(Request $request){
+        // dd($request);
+        $trk = explode("-", $request->input('tracking_no'));
+        // dd($trk);
+        $department = explode(" | ", $request->input('document_current_loc'));
+
+        $trkExists = RequestedDocument::where('trk_id', $trk[1])->exists();
+        // dd($trkExists);
+        if(!$trkExists){
+            // Build the success message
+            $message = "There's is no record's for that Tracking Number!";
+
+            // Prepare the toast notification data
+            $notification = [
+                'status' => 'error',
+                'message' => $message,
+            ];
+
+            // Convert the notification to JSON
+            $notificationJson = json_encode($notification);
+
+            // Redirect back with a success message and the inserted products
+            return back()->with('notification', $notificationJson);
+        }
+        // Create a new RequestedDocument instance with default values notify the accounts that forwarded
+        $documentLogs = new Log([
+            'trk_id' => $trk[1],
+            'requested_document_id' => $request->input('document_id'),
+            'forwarded_to' => Auth::user()->office_id, // department id
+            'current_location' => $request->input('document_current_loc'), // current loaction  department abbrev
+            'notes' => 'Documents reached '.$department[1].'. Tracking Number - '.$request->input('tracking_no'),//if the have a notes
+            'notes_user' => $request->filled('notes') ? $request->input('notes') : 'false',
+            'status' => 'approved', // Set the default status
+            'scanned' => 2, // Set the default status
+        ]);  
+        $documentLogs->save();
+        // Build the success message
+        $message = "Successfully Received Documents!";
+
+        // Prepare the toast notification data
+        $notification = [
+            'status' => 'success',
+            'message' => $message,
+        ];
+
+        // Convert the notification to JSON
+        $notificationJson = json_encode($notification);
+
+        // Redirect back with a success message and the inserted products
+        return back()->with('notification', $notificationJson);
+    }
+
     public function update(Request $request){
         // dd($request);
          // Parse the trk_id
@@ -497,6 +567,7 @@ class RequestedDocumentController extends Controller
                 'purpose' => $document->purpose,
                 'documents' => $document->documents,
                 'status' => $document->status,
+                'current_location'=>$document->current_location,
                 'created_at' => $document->created_at,
                 'corporate_office' => [
                     'office_id' => $document->office_id,
@@ -505,7 +576,7 @@ class RequestedDocumentController extends Controller
                     'office_head' => $document->office_head,
                 ],
                 'logs' => $formattedLocationsString,
-                // 'scanned' =>$document->scanned,
+                'scanned' =>$document->scanned,
             ];
 
             return $formattedDocument;
@@ -588,7 +659,7 @@ class RequestedDocumentController extends Controller
         // Reset font size for the value (smaller)
         $pdf->SetFont('Arial', '', 14);
         $pdf->SetTextColor(0, 0, 255); // RGB color
-        $pdf->Cell(0, -5, "TRK-".$trk_id, 0, 1, 'C');
+        $pdf->Cell(0, -6, "TRK-".$trk_id, 0, 1, 'C');
 
         // Date Created
         $pdf->SetFont('Arial', '', 16);

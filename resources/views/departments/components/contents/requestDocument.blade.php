@@ -199,7 +199,7 @@
                                             <span class="">
                                                 @if ($document['type'] !== 'my document')
                                                 {{-- data-scanned-id="{{ $document['scanned'] }}" --}}
-                                                    <a class="ri-map-pin-line text-white font-size-18 btn btn-danger p-2 pin-document-btn"  data-trk="{{ $document['trk_id'] }}" data-id="{{ $document['document_id'] }}" data-document-id="{{ $document['documents'] }}" data-office-id="{{ $document['corporate_office']['office_id'] }}"  data-bs-toggle="tooltip" data-bs-placement="top" title="Forward Document"></a>
+                                                    <a class="ri-map-pin-line text-white font-size-18 btn btn-danger p-2 pin-document-btn" data-current-loc="{{ $document['current_location'] }}" data-scanned-id="{{ $document['scanned'] }}" data-trk="{{ $document['trk_id'] }}" data-id="{{ $document['document_id'] }}" data-document-id="{{ $document['documents'] }}" data-office-id="{{ $document['corporate_office']['office_id'] }}"  data-bs-toggle="tooltip" data-bs-placement="top" title="Forward Document"></a>
                                                 @endif
                                                 {{-- for barcodes --}}
                                                 @if ($document['type'] === 'my document' && $document['status'] !== 'pending')
@@ -231,6 +231,8 @@
     @include('departments.components.modals.pin')
     {{-- open print modal --}}
     @include('departments.components.modals.print')
+    {{-- open print modal --}}
+    @include('departments.components.modals.scanned')
 @endsection
 
 @section('script')
@@ -309,8 +311,9 @@
                     var trackNo = $(this).data("trk");
                     var trackId = $(this).data("id");
                     var timelineHtml = ''
-                    var timelineTrk = ''
+                    var timelineTrk = '******'
                     var className = ''
+                    var noteClass = ''
                     // alert(trackNo);
                     if (trackNo != '') {
                         // Usage example
@@ -322,8 +325,13 @@
                                     // Split the value into parts
                                     var parts = log.current_location.split('|');
                                 
-                                    if(log.trk_id !== null){
+                                    if(log.scanned == 2){
                                         timelineTrk = log.trk_id;
+                                    }
+                                    if(log.notes_user !== 'false'){
+                                        noteClass = 'border border-danger rounded text-danger'
+                                    }else{
+                                        noteClass = 'border border-0 text-white'
                                     }
                                     switch (log.status) {
                                         case 'pending':
@@ -368,6 +376,10 @@
                                                 <h2 style="margin-top: -10px;" class="cd-date text-center ${log.class}">${log.now}</h2>
                                                 <span style="margin-top: 10px;" class="cd-date text-center">${log.time_sent}</span>
                                                 <span style="margin-top: 30px;" class="cd-date">${log.time_spent}</span>  
+                                                <span style="margin-top: 65px;" class="cd-date ${noteClass}">
+                                                    <span><b>NOTE</b></span></br>
+                                                    ${ log.notes_user }
+                                                </span>  
                                             </div>
                                         </div>
                                         `
@@ -408,9 +420,14 @@
                         backdrop: 'static',
                         keyboard: false
                     })
+                    $('#scanned-barcode-modal').modal({
+                        backdrop: 'static',
+                        keyboard: false
+                    })
 
                     var trkId = $(this).data('trk')//trk_id
                     var scannedId = $(this).data('scanned-id')//scanned_id
+                    var currentLoc = $(this).data('current-loc')//scanned_id
                     var documentId = parseInt($(this).data('id'))//documents id
                     var document = $(this).data('document-id')//documents
                     var officeId = $(this).data('office-id')//documents
@@ -479,12 +496,25 @@
                                     }
                                 });
                         });
-                    
-                        if(scannedId !== 1){
-                            $('#pin-document-modal').modal('show')
-                        }else{
-                            alert("Wait for the documents to proceed to this section. Documents is not Scanned!");
+                        // alert(currentLoc)
+                        switch (scannedId) {
+                            case 1:
+                                $('.rdi').val(documentId)
+                                $('.loc').val(currentLoc)
+                                $('#scanned-barcode-modal').modal('show')
+                                break;
+                            case 2:
+                                $('#pin-document-modal').modal('show')
+                                break;
+                        
+                            default:
+                                break;
                         }
+                        // if(scannedId !== 1){
+                        //     $('#pin-document-modal').modal('show')
+                        // }else{
+                        //     alert("Wait for the documents to proceed to this section. Documents is not Scanned!");
+                        // }
                         
                 })
 
@@ -502,48 +532,6 @@
                                 console.log(record)
                                 $('.pdf-container').attr('src',record.document_code)
                             });
-                            // console.log(response)
-                            // var dataHtml = ''
-                            // response.records.forEach((record) => {
-                            //     dataHtml += `
-                            //         <div id="barcodeContainer" class="mb-2">
-                            //             <span class="text-primary mb-2" style="display: flex; justify-content: center; align-items: center;">
-                            //                 ${ record.barcode }
-                            //             </span>
-                            //             <span class="text-primary" style="font-size:16px;">TRK-${record.trk_id}</span>
-                            //         </div>
-                            //         <hr>
-                            //         <h5>
-                            //             Date Created</br>
-                            //             <span class="text-secondary mb-2" style="font-size:14px;">${record.formatted_created_at}</span>    
-                            //         </h5>
-
-                            //         <h5>
-                            //             Date Approved</br>
-                            //             <span class="text-secondary mb-2" style="font-size:14px;">${record.formatted_updated_at}</span>
-                            //         </h5>
-
-                            //         <h5>
-                            //             Department</br>
-                            //             <span class="text-secondary barcode-department mb-2" style="font-size:14px;">${record.department}</span>
-                            //         </h5>
-                                    
-                            //         <h5>
-                            //             Account</br>
-                            //             <span class="text-secondary barcode-user" style="font-size:14px;">${record.user_name}</span>
-                            //         </h5>
-                                    
-                            //     `
-                            // });
-                            // $('.credentials').html(dataHtml)
-                            
-                            // $('#btn-print').on('click',function(){
-                            //     // var printableContent = $('.printable-content')
-                            //      // Apply a class to hide the rest of the page during printing
-                            //     // $('body').addClass('print-mode');
-                            //     window.print();
-                            //     // $('body').removeClass('print-mode');
-                            // })
                         })
                         .catch(function(error){
                             console.log(error)

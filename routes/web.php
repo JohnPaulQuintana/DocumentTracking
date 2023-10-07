@@ -48,6 +48,7 @@ Route::middleware(['auth', 'verified','roleguard'])->group(function(){
     Route::post('/documents', [RequestedDocumentController::class,'create'])->name('request.documents');
     Route::get('/progress', [DepartmentController::class,'documentProgress'])->name('document.progress');
     Route::get('/get-barcode', [RequestedDocumentController::class,'barcodePrinting'])->name('barcode.print');
+    Route::post('/recieved-document', [RequestedDocumentController::class,'recievedDocument'])->name('recieved.document');
 });
 
 Route::middleware('auth')->group(function () {

@@ -17,7 +17,8 @@ return new class extends Migration
             $table->string('trk_id')->nullable();//tracking no
             $table->string('forwarded_to');//id of departments forwarded
             $table->string('current_location');
-            $table->string('notes');
+            $table->string('notes')->nullable();
+            $table->string('notes_user')->nullable();
             $table->string('status');
             $table->boolean('scanned')->default(false);//indicators for that the documents is scan by user. so able to forward
             $table->timestamps();
