@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use Codedge\Fpdf\Fpdf\Fpdf;
 use Carbon\Carbon;
 use App\Models\Log;
 use App\Models\Office;
 use Milon\Barcode\DNS1D;
 use App\Events\NotifyEvent;
+use App\Models\Barcode;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use App\Models\RequestedDocument;
@@ -105,19 +107,26 @@ class RequestedDocumentController extends Controller
         // Update the 'status' field using the trk_id
         $affectedRows = RequestedDocument::where('id', $id)->update(['trk_id'=>$this->generateTRKID(),'status' => 'approved']);
         // Retrieve the updated records
-        $updatedRecords = RequestedDocument::where('id', $id)->first();
-
+        $updatedRecords = RequestedDocument::where('id', $id)->get();
+        // dd($updatedRecords[0]->id);
+        $formattedRecords = $updatedRecords->map(function ($record) {
+            $record->formatted_created_at = Carbon::parse($record->created_at)->isoFormat('ddd DD, YYYY, MMM');
+            $record->formatted_updated_at = Carbon::parse($record->updated_at)->isoFormat('ddd DD, YYYY, MMM');
+            return $record;
+        });
+        
         // get the office cred
         $office = Office::where('id',Auth::user()->office_id)->first();
       
         // Create a new RequestedDocument instance with default values
         $documentLogs = new Log([
-            'trk_id' => $updatedRecords->trk_id,
-            'requested_document_id' => $updatedRecords->id,
+            'trk_id' => $updatedRecords[0]->trk_id,
+            'requested_document_id' => $updatedRecords[0]->id,
             'forwarded_to' => $office->id, // department id
             'current_location' => $office->office_abbrev. ' | ' .$office->office_name, // current loaction  department abbrev
             'notes' => 'default notes',//if the have a notes
-            'status' => $updatedRecords->status, // Set the on-going status
+            'status' => $updatedRecords[0]->status, // Set the on-going status
+            'scanned' => true,
         ]);
 
         $documentLogs->save();
@@ -126,11 +135,17 @@ class RequestedDocumentController extends Controller
         $notification = new Notification([
             'notification_from_id' => auth()->user()->id,
             'notification_from_name' => auth()->user()->name,
-            'notification_to_id' => $updatedRecords->requestor_user,//by default admin
+            'notification_to_id' => $updatedRecords[0]->requestor_user,//by default admin
             'notification_message'=>auth()->user()->name.' from '.$office->office_name .' has approved your document!',
             'notification_status'=>'unread',
         ]);
         $notification->save();
+
+        // generate barcode png
+        $this->generateBarcode($updatedRecords[0]->trk_id);//generate barcode png
+
+        // generate pdf
+        $this->generatePdf($updatedRecords[0]->trk_id, $updatedRecords[0]->id,$notification->notification_from_name,$office->office_name, $updatedRecords[0]->formatted_created_at,$updatedRecords[0]->formatted_created_at);
 
         event(new NotifyEvent('documents is updated!'));
         // Build the success message
@@ -183,6 +198,7 @@ class RequestedDocumentController extends Controller
                 'recieved_offices' => 1,//administrator
                 'documents' => $imageName,
                 'status' => 'pending', // Set the default status
+                'scanned'=>false,
             ]);
 
             $documentRequest->save();
@@ -194,6 +210,7 @@ class RequestedDocumentController extends Controller
                 'current_location' => $request->input('department'), // current loaction  department abbrev
                 'notes' => 'default notes',
                 'status' => $documentRequest->status, // Set the default status
+                'scanned'=>false,
             ]);
             
             $documentLogs->save();
@@ -322,6 +339,7 @@ class RequestedDocumentController extends Controller
             'current_location' => $partsDepartment[2]. ' | ' .$partsDepartment[1], // current loaction  department abbrev
             'notes' => 'Documents is forwarded to '.$partsDepartment[1].'. Accounts '.$partsDepartmentStaff[2],//if the have a notes
             'status' => 'forwarded', // Set the default status
+            'scanned' => true, // Set the default status
         ]);  
         $documentLogs->save();
 
@@ -404,26 +422,11 @@ class RequestedDocumentController extends Controller
     // barcode
     public function barcodePrinting(Request $request){
         // dd($request->trk);
-        $records = DB::table('requested_documents')
-            ->leftJoin('users', 'requested_documents.requestor_user', '=', 'users.id')
-            ->leftJoin('offices', 'users.office_id', '=', 'offices.id')
-            ->select('requested_documents.*', 'users.name as user_name', 'users.id as user_id','users.office_id as user_office_id', 'offices.office_name as department', 'offices.office_head as head')
+        $records = DB::table('barcodes')
+            ->select('barcodes.*')
+            ->where('trk_id',$request->trk)
             ->get();
-
-            $formattedRecords = $records->map(function ($record) {
-                $record->formatted_created_at = Carbon::parse($record->created_at)->isoFormat('ddd DD, YYYY, MMM');
-                $record->formatted_updated_at = Carbon::parse($record->updated_at)->isoFormat('ddd DD, YYYY, MMM');
-                return $record;
-            });
-
-            // Generate the barcode image
-            $barcodeImage = DNS1D::getBarcodeHTML($records[0]->trk_id, 'PHARMA', 2,50);
-            // Create a new collection with the added barcode property
-            $recordsWithBarcode = $formattedRecords->map(function ($record) use ($barcodeImage) {
-                $record->barcode = $barcodeImage;
-                return $record;
-            });
-
+        // dd($records); 
             return response()->json(['records'=>$records]);
 
     }
@@ -467,7 +470,7 @@ class RequestedDocumentController extends Controller
     function formatDocumentsWithLogs($types,$documents)
     {
         return $documents->map(function ($document) use ($types) {
-            $log = Log::select('requested_document_id', 'trk_id', 'current_location', 'notes', 'status')
+            $log = Log::select('requested_document_id', 'trk_id', 'current_location', 'notes', 'status','scanned')
                 ->where('requested_document_id', $document->id)->get();
 
             // Extract the 'current_location' values from the logs
@@ -502,6 +505,7 @@ class RequestedDocumentController extends Controller
                     'office_head' => $document->office_head,
                 ],
                 'logs' => $formattedLocationsString,
+                // 'scanned' =>$document->scanned,
             ];
 
             return $formattedDocument;
@@ -514,4 +518,122 @@ class RequestedDocumentController extends Controller
         return $logsRecord;
     }
 
+    // generate barcode png
+    function generateBarcode($trk_id){
+        // Generate the barcode image path
+        $dns1d = new DNS1D;
+        $barcodeImagePath = $dns1d->getBarcodePNGPath($trk_id, 'PHARMA', 3, 50);
+
+        if ($barcodeImagePath) {
+            // Define the destination folder within the public directory
+            $destinationFolder = 'barcode';
+
+            // Get the image file name (you may need to customize this based on your requirements)
+            $fileName = $trk_id.'.png';
+
+            // Define the full path where the image should be saved in the public folder
+            $fullPath = public_path($destinationFolder . '/' . $fileName);
+
+            // Ensure the destination folder exists; if not, create it
+            if (!file_exists(public_path($destinationFolder))) {
+                mkdir(public_path($destinationFolder), 0777, true);
+            }
+
+            // Copy the barcode image to the specified folder within the public directory
+            if (copy(public_path($barcodeImagePath), $fullPath)) {
+                // Image has been successfully saved
+                echo "Barcode image saved to $destinationFolder folder in the public directory.";
+                // Delete the original barcode image from the public directory
+                unlink(public_path($barcodeImagePath));
+            } else {
+                // Handle the case where the image could not be saved
+                echo "Failed to save barcode image.";
+            }
+        } else {
+            // Handle the case where the barcode image data could not be generated
+            echo "Failed to generate barcode image.";
+        }
+    }
+
+    // generate pdf
+    function generatePdf($trk_id, $id,$name,$department, $date_created,$date_approved){
+        $barcode_Path = 'barcode_pdfs/';
+        // create pdf for carcode printing
+        $pdf = new Fpdf;
+
+        $pdf->AddPage();
+
+         // Define the card dimensions and position
+        $cardX = 20; // X-coordinate of the card
+        $cardY = 20; // Y-coordinate of the card
+        $cardWidth = 170; // Width of the card
+        $cardHeight = 150; // Height of the card
+
+
+        // Draw a border around the card
+        $pdf->SetDrawColor(0); // Set the border color to black
+        $pdf->Rect($cardX, $cardY, $cardWidth, $cardHeight);
+
+        // Calculate Y-coordinate for the title to center it vertically in the card
+        $pdf->SetFont('Courier', 'B', 18);
+        $titleHeight = 10; // Height of the title cell
+        // Center-align the title and set color (e.g., blue)
+        $pdf->Cell(0, 50, 'Tracking No.', 0, 1, 'C', false, '');
+        
+         // Add the barcode image
+        $barcodeImageX = ($cardX * 4); // X-coordinate of the barcode image
+        $barcodeImageY = 40; // Y-coordinate of the barcode image
+        $pdf->Image(public_path('barcode/').$trk_id.'.png', $barcodeImageX , $barcodeImageY, 50);
+
+        // Reset font size for the value (smaller)
+        $pdf->SetFont('Arial', '', 14);
+        $pdf->SetTextColor(0, 0, 255); // RGB color
+        $pdf->Cell(0, -5, "TRK-".$trk_id, 0, 1, 'C');
+
+        // Date Created
+        $pdf->SetFont('Arial', '', 16);
+        $pdf->SetTextColor(0); // RGB color
+        $pdf->Cell(0, 30, 'Date Created', 0, 1, 'C');
+        // 
+        $pdf->SetFont('Arial', '', 14);
+        $pdf->SetTextColor(0, 0, 255); // RGB color
+        $pdf->Cell(0, -15, $date_created, 0, 1, 'C');
+
+        // Reset font size for the value (smaller)
+        $pdf->SetFont('Arial', '', 16);
+        $pdf->SetTextColor(0); // RGB color
+        $pdf->Cell(0, 30, 'Date Approved', 0, 1, 'C');
+        // 
+        $pdf->SetFont('Arial', '', 14);
+        $pdf->SetTextColor(0, 0, 255); // RGB color
+        $pdf->Cell(0, -15, $date_approved, 0, 1, 'C');
+
+        // Date Approved
+        $pdf->SetFont('Arial', '', 16);
+        $pdf->SetTextColor(0); // RGB color
+        $pdf->Cell(0, 30, 'Department', 0, 1, 'C');
+        // 
+        $pdf->SetFont('Arial', '', 14);
+        $pdf->SetTextColor(0, 0, 255); // RGB color
+        $pdf->Cell(0, -15, $department.' Office', 0, 1, 'C');
+
+        // Date Approved
+        $pdf->SetFont('Arial', '', 16);
+        $pdf->SetTextColor(0); // RGB color
+        $pdf->Cell(0, 30, 'Department Staff', 0, 1, 'C');
+        // 
+        $pdf->SetFont('Arial', '', 14);
+        $pdf->SetTextColor(0, 0, 255); // RGB color
+        $pdf->Cell(0, -15, $name, 0, 1, 'C');
+
+        $pdf->Output('F', public_path($barcode_Path) . $trk_id . '.pdf');
+
+        $barcodeRecord = new Barcode([
+            'trk_id' => $trk_id,
+            'document_id' => $id,
+            'document_code' => $barcode_Path . $trk_id . '.pdf',
+        ]);
+
+        $barcodeRecord->save();
+    }
 }

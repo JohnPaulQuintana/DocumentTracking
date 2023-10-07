@@ -9,5 +9,5 @@ class Barcode extends Model
 {
     use HasFactory;
 
-    public $fillable = ['document_id','document_code'];
+    public $fillable = ['trk_id','document_id','document_code'];
 }

@@ -1,5 +1,11 @@
 @extends('departments.index')
 
+{{-- notes important 
+    0 – not approved 
+    1 – approved // for admin
+    2 - scanned
+ --}}
+
 @section('head')
     <meta charset="utf-8" />
     <title>Departments Dashboard</title>
@@ -113,12 +119,12 @@
                                 </tr>
                             </thead><!-- end thead -->
                             <tbody>
-                                {{-- {{ $officeNames }} --}}
+                                {{-- {{ $documents }} --}}
                                 @php
                                      $badges = []
                                 @endphp
                                 @foreach ($documents as $document)
-                                    {{-- {{ $document['type'] }} --}}
+                                    {{-- {{ $document }} --}}
                                     @php
                                         $trk = $document['trk_id'];
                                         // dd($trk); // Check the value of $trkId
@@ -143,6 +149,8 @@
                                                                 </span>
                                                                 @break
                                                             @case('requested')
+                                                                <i class="ri-checkbox-blank-circle-fill font-size-10 text-success align-middle me-2"></i>
+                                                                {{ __('TRK-XXXXXX') }}
                                                                 <span class="position-absolute bottom-50 left-100 translate-middle badge bg-danger">
                                                                     {{ $document['type'] }}
                                                                 </span>
@@ -190,10 +198,11 @@
                                         <td width="50px">
                                             <span class="">
                                                 @if ($document['type'] !== 'my document')
-                                                    <a class="ri-map-pin-line text-white font-size-18 btn btn-danger p-2 pin-document-btn" data-trk="{{ $document['trk_id'] }}" data-id="{{ $document['document_id'] }}" data-document-id="{{ $document['documents'] }}" data-office-id="{{ $document['corporate_office']['office_id'] }}"  data-bs-toggle="tooltip" data-bs-placement="top" title="Forward Document"></a>
+                                                {{-- data-scanned-id="{{ $document['scanned'] }}" --}}
+                                                    <a class="ri-map-pin-line text-white font-size-18 btn btn-danger p-2 pin-document-btn"  data-trk="{{ $document['trk_id'] }}" data-id="{{ $document['document_id'] }}" data-document-id="{{ $document['documents'] }}" data-office-id="{{ $document['corporate_office']['office_id'] }}"  data-bs-toggle="tooltip" data-bs-placement="top" title="Forward Document"></a>
                                                 @endif
                                                 {{-- for barcodes --}}
-                                                @if ($document['type'] === 'my document')
+                                                @if ($document['type'] === 'my document' && $document['status'] !== 'pending')
                                                     <a class="ri-barcode-line text-white font-size-18 btn btn-dark p-2 barcode-document-btn" data-trk="{{ $document['trk_id'] }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Print Barcode"></a>
                                                 @endif
                                                 <a id="view-document-btn" class="ri-eye-line text-white font-size-18 btn btn-info p-2 view-document-btn" data-document-id="{{ $document['documents'] }}" data-bs-toggle="tooltip" data-bs-placement="top" title="View Document"></a>
@@ -401,10 +410,11 @@
                     })
 
                     var trkId = $(this).data('trk')//trk_id
+                    var scannedId = $(this).data('scanned-id')//scanned_id
                     var documentId = parseInt($(this).data('id'))//documents id
                     var document = $(this).data('document-id')//documents
                     var officeId = $(this).data('office-id')//documents
-
+                    // alert(scannedId)
                     console.log(trkId, documentId, document)
 
                     $('.trkNo').text(trkId)
@@ -470,7 +480,12 @@
                                 });
                         });
                     
-                        $('#pin-document-modal').modal('show')
+                        if(scannedId !== 1){
+                            $('#pin-document-modal').modal('show')
+                        }else{
+                            alert("Wait for the documents to proceed to this section. Documents is not Scanned!");
+                        }
+                        
                 })
 
                 //print open
@@ -483,48 +498,52 @@
                     var trk = $(this).data('trk')
                     getDetailsForPrinting(trk)
                         .then(function(response){
-                            console.log(response)
-                            var dataHtml = ''
-                            response.records.forEach((record) => {
-                                dataHtml += `
-                                    <div id="barcodeContainer" class="mb-2">
-                                        <span class="text-primary mb-2" style="display: flex; justify-content: center; align-items: center;">
-                                            ${ record.barcode }
-                                        </span>
-                                        <span class="text-primary" style="font-size:16px;">TRK-${record.trk_id}</span>
-                                    </div>
-                                    <hr>
-                                    <h5>
-                                        Date Created</br>
-                                        <span class="text-secondary mb-2" style="font-size:14px;">${record.formatted_created_at}</span>    
-                                    </h5>
-
-                                    <h5>
-                                        Date Approved</br>
-                                        <span class="text-secondary mb-2" style="font-size:14px;">${record.formatted_updated_at}</span>
-                                    </h5>
-
-                                    <h5>
-                                        Department</br>
-                                        <span class="text-secondary barcode-department mb-2" style="font-size:14px;">${record.department}</span>
-                                    </h5>
-                                    
-                                    <h5>
-                                        Account</br>
-                                        <span class="text-secondary barcode-user" style="font-size:14px;">${record.user_name}</span>
-                                    </h5>
-                                    
-                                `
+                            response.records.forEach(record => {
+                                console.log(record)
+                                $('.pdf-container').attr('src',record.document_code)
                             });
-                            $('.credentials').html(dataHtml)
+                            // console.log(response)
+                            // var dataHtml = ''
+                            // response.records.forEach((record) => {
+                            //     dataHtml += `
+                            //         <div id="barcodeContainer" class="mb-2">
+                            //             <span class="text-primary mb-2" style="display: flex; justify-content: center; align-items: center;">
+                            //                 ${ record.barcode }
+                            //             </span>
+                            //             <span class="text-primary" style="font-size:16px;">TRK-${record.trk_id}</span>
+                            //         </div>
+                            //         <hr>
+                            //         <h5>
+                            //             Date Created</br>
+                            //             <span class="text-secondary mb-2" style="font-size:14px;">${record.formatted_created_at}</span>    
+                            //         </h5>
+
+                            //         <h5>
+                            //             Date Approved</br>
+                            //             <span class="text-secondary mb-2" style="font-size:14px;">${record.formatted_updated_at}</span>
+                            //         </h5>
+
+                            //         <h5>
+                            //             Department</br>
+                            //             <span class="text-secondary barcode-department mb-2" style="font-size:14px;">${record.department}</span>
+                            //         </h5>
+                                    
+                            //         <h5>
+                            //             Account</br>
+                            //             <span class="text-secondary barcode-user" style="font-size:14px;">${record.user_name}</span>
+                            //         </h5>
+                                    
+                            //     `
+                            // });
+                            // $('.credentials').html(dataHtml)
                             
-                            $('#btn-print').on('click',function(){
-                                // var printableContent = $('.printable-content')
-                                 // Apply a class to hide the rest of the page during printing
-                                // $('body').addClass('print-mode');
-                                window.print();
-                                // $('body').removeClass('print-mode');
-                            })
+                            // $('#btn-print').on('click',function(){
+                            //     // var printableContent = $('.printable-content')
+                            //      // Apply a class to hide the rest of the page during printing
+                            //     // $('body').addClass('print-mode');
+                            //     window.print();
+                            //     // $('body').removeClass('print-mode');
+                            // })
                         })
                         .catch(function(error){
                             console.log(error)

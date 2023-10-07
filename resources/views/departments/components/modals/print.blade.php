@@ -11,7 +11,7 @@
                     </div>
                     <div class="modal-body">
                         
-                        <div class="printable-content">
+                        {{-- <div class="printable-content">
                             <h5 class="text-center">Tracking No.</h5>
                             <h5 class="text-center barcode-trk text-center">
                               <!-- Content here -->
@@ -21,12 +21,9 @@
                                 <!-- Content here -->
                               </div>
                             </div>
-                          </div>
+                          </div> --}}
+                          <iframe class="pdf-container" src="" style="top:0; left:0; bottom:0; right:0; width:100%; height:480px; border:none; margin:0; padding:0; overflow:hidden;"></iframe>
                           
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-success waves-effect" id="btn-print">Print Barcode</button>
-                        {{-- <button type="submit" class="btn btn-danger waves-effect waves-light">Archived</button> --}}
                     </div>
                 </div><!-- /.modal-content -->
             </form>

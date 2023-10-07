@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('barcodes', function (Blueprint $table) {
             $table->id();
+            $table->string('trk_id');//id of documents
             $table->unsignedBigInteger('document_id');//id of documents
             $table->string('document_code');
             $table->timestamps();

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Log extends Model
 {
     use HasFactory;
-    protected $fillable = ['requested_document_id','trk_id','forwarded_to', 'current_location','notes','status'];
+    protected $fillable = ['requested_document_id','trk_id','forwarded_to', 'current_location','notes','status','scanned'];
 
     /**
      * Define an inverse one-to-many relationship with the RequestedDocument model.

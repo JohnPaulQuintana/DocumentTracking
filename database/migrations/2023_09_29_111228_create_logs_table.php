@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('current_location');
             $table->string('notes');
             $table->string('status');
+            $table->boolean('scanned')->default(false);//indicators for that the documents is scan by user. so able to forward
             $table->timestamps();
 
              // Define a foreign key constraint
