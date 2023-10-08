@@ -593,7 +593,7 @@ class RequestedDocumentController extends Controller
     function generateBarcode($trk_id){
         // Generate the barcode image path
         $dns1d = new DNS1D;
-        $barcodeImagePath = $dns1d->getBarcodePNGPath($trk_id, 'PHARMA', 3, 50);
+        $barcodeImagePath = $dns1d->getBarcodePNGPath($trk_id, 'C39', 3, 50);
 
         if ($barcodeImagePath) {
             // Define the destination folder within the public directory
@@ -625,6 +625,8 @@ class RequestedDocumentController extends Controller
             echo "Failed to generate barcode image.";
         }
     }
+
+
 
     // generate pdf
     function generatePdf($trk_id, $id,$name,$department, $date_created,$date_approved){

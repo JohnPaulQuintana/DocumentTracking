@@ -10,6 +10,7 @@ use App\Http\Controllers\FileUploadController;
 use App\Http\Controllers\ModalController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OfficeController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RequestedDocumentController;
 
 /*
@@ -49,11 +50,15 @@ Route::middleware(['auth', 'verified','roleguard'])->group(function(){
     Route::get('/progress', [DepartmentController::class,'documentProgress'])->name('document.progress');
     Route::get('/get-barcode', [RequestedDocumentController::class,'barcodePrinting'])->name('barcode.print');
     Route::post('/recieved-document', [RequestedDocumentController::class,'recievedDocument'])->name('recieved.document');
+    Route::get('/dept', [DepartmentController::class,'getDept'])->name('get.Dept');
 });
 
 Route::middleware('auth')->group(function () {
     // notification
     Route::get('/notification',[NotificationController::class,'getNotification'])->name('notify');
+    // on
+    Route::get('/on',[ReportController::class,'getOnGoingDocuments'])->name('on');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

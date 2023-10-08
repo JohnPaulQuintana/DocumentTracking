@@ -26,7 +26,7 @@
             </li>
             <li>
                 <a href="{{ route('administrator.dashboard.incoming.request') }}" class="waves-effect">
-                    <i class="fas fa-file"></i><span class="badge rounded-pill bg-success float-end">3</span>
+                    <i class="fas fa-file"></i><span class="badge rounded-pill bg-success float-end"></span>
                     <span>Requests</span>
                 </a>
             </li>
@@ -36,12 +36,12 @@
                     <span>Offices</span>
                 </a>
             </li>
-            <li>
+            {{-- <li>
                 <a href="#" class="waves-effect">
                     <i class="fas fa-users"></i>
                     <span>Users</span>
                 </a>
-            </li>
+            </li> --}}
 
         </ul>
     </div>

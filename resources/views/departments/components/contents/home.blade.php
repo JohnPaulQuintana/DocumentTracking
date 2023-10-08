@@ -9,6 +9,12 @@
 <!-- App favicon -->
 <link rel="shortcut icon" href="assets/images/favicon.ico">
 
+<!-- Plugin css -->
+<link rel="stylesheet" href="{{ asset('assets/libs/@fullcalendar/core/main.min.css') }}" type="text/css">
+<link rel="stylesheet" href="{{ asset('assets/libs/@fullcalendar/daygrid/main.min.css') }}" type="text/css">
+<link rel="stylesheet" href="{{ asset('assets/libs/@fullcalendar/bootstrap/main.min.css') }}" type="text/css">
+<link rel="stylesheet" href="{{ asset('assets/libs/@fullcalendar/timegrid/main.min.css') }}" type="text/css">
+
 {{-- toast css --}}
 <link rel="stylesheet" type="text/css" href="{{ asset('assets/libs/toastr/build/toastr.min.css') }}">
 
@@ -54,7 +60,7 @@
         @include('departments.components.parts.card')
     </div><!-- end row -->
 
-    <div class="row">
+    {{-- <div class="row">
         <div class="col-xl-12">
             <div class="card">
                 <div class="card-body">
@@ -126,7 +132,7 @@
             </div><!-- end card -->
         </div>
         <!-- end col -->
-    </div>
+    </div> --}}
 
 @endsection
 
@@ -165,36 +171,47 @@
         <!-- toastr init -->
         <script src="{{ asset('assets/js/pages/toastr.init.js') }}"></script>
 
+        <!-- plugin js -->
+        <script src="{{ asset('assets/libs/moment/min/moment.min.js') }}"></script>
+        <script src="{{ asset('assets/libs/jquery-ui-dist/jquery-ui.min.js') }}"></script>
+        <script src="{{ asset('assets/libs/@fullcalendar/core/main.min.js') }}"></script>
+        <script src="{{ asset('assets/libs/@fullcalendar/bootstrap/main.min.js') }}"></script>
+        <script src="{{ asset('assets/libs/@fullcalendar/daygrid/main.min.js') }}"></script>
+        <script src="{{ asset('assets/libs/@fullcalendar/timegrid/main.min.js') }}"></script>
+        <script src="{{ asset('assets/libs/@fullcalendar/interaction/main.min.js') }}"></script>
+
+        <!-- Calendar init -->
+        {{-- <script src="{{ asset('assets/js/pages/calendar.init.js') }}"></script> --}}
+
         <!-- App js -->
         <script src="assets/js/app.js"></script>
-        
 
         @if (session()->has('notification'))
-    <script>
-        $(document).ready(function() {
-            // Set Toastr options
-            toastr.options = {
-                "closeButton": false,
-                "debug": false,
-                "newestOnTop": false,
-                "progressBar": false,
-                "positionClass": "toast-top-right",
-                "preventDuplicates": false,
-                "onclick": null,
-                "showDuration": 300,
-                "hideDuration": 1000,
-                "timeOut": 5000,
-                "extendedTimeOut": 1000,
-                "showEasing": "swing",
-                "hideEasing": "linear",
-                "showMethod": "fadeIn",
-                "hideMethod": "fadeOut"
-            };
-            var notificationJson = {!! json_encode(session('notification')) !!};
-            var notification = JSON.parse(notificationJson);
-            console.log(notification)
-            toastr[notification.status](notification.message);
-        });
-    </script>
-    @endif
+        <script>
+            $(document).ready(function() {
+                // Set Toastr options
+                toastr.options = {
+                    "closeButton": false,
+                    "debug": false,
+                    "newestOnTop": false,
+                    "progressBar": false,
+                    "positionClass": "toast-top-right",
+                    "preventDuplicates": false,
+                    "onclick": null,
+                    "showDuration": 300,
+                    "hideDuration": 1000,
+                    "timeOut": 5000,
+                    "extendedTimeOut": 1000,
+                    "showEasing": "swing",
+                    "hideEasing": "linear",
+                    "showMethod": "fadeIn",
+                    "hideMethod": "fadeOut"
+                };
+                var notificationJson = {!! json_encode(session('notification')) !!};
+                var notification = JSON.parse(notificationJson);
+                console.log(notification)
+                toastr[notification.status](notification.message);
+            });
+        </script>
+        @endif
 @endsection

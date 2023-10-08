@@ -8,7 +8,7 @@
         <div class="mt-3">
             <h4 class="font-size-16 mb-1">{{ Auth::user()->name }}</h4>
             {{-- <i class="ri-record-circle-line align-middle font-size-14 text-success"></i> --}}
-            <span class="text-muted">{{ Auth::user()->department }}</span>
+            <span class="text-muted dept"></span>
         </div>
     </div>
 
@@ -26,16 +26,16 @@
             </li>
             <li>
                 <a href="{{ route('departments.dashboard.incoming') }}" class="waves-effect">
-                    <i class="fas fa-file"></i><span class="badge rounded-pill bg-danger float-end">3</span>
+                    <i class="fas fa-file"></i><span class="badge rounded-pill bg-danger float-end"></span>
                     <span>Requests</span>
                 </a>
             </li>
-            <li>
+            {{-- <li>
                 <a href="{{ route('departments.dashboard.department') }}" class="waves-effect">
                     <i class="fas fa-building waves-effect waves-light"></i>
                     <span>Offices</span>
                 </a>
-            </li>
+            </li> --}}
             {{-- <li>
                 <a id="send-documents-btn" class="waves-effect">
                     <i class="ri-dashboard-line waves-effect waves-light"></i>

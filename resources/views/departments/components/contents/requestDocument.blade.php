@@ -101,7 +101,7 @@
                             <a id="new-request" href="javascript:void(0);" class="dropdown-item text-success">New Request</a>
                         </div>
                     </div>
-
+                    {{-- {{ Auth::user() }} --}}
                     <h4 class="card-title mb-4">Request List</h4>
                     {{-- {{ $logs }} --}}
                     <div class="table-responsive">
@@ -270,7 +270,7 @@
 
         <!-- App js -->
         <script src="{{ asset('assets/js/app.js') }}"></script>
-
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js" integrity="sha512-r6rDA7W6ZeQhvl8S7yRVQUKVHdexq+GAlNkNNqVC7YyIV+NwqCTJe2hDWCiffTyRNOeGEzRRJ9ifvRm/HCzGYg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         {{-- custom js --}}
         <script>
             $(document).ready(function(){
@@ -397,6 +397,56 @@
                         showalert('warning',"'This document's is in pending state. no history available!")
                     }
                 })
+
+                $('.scanner-btn').on('click', function () {
+                    $('#scanner-activation').html(
+                        `<div id="reader" class="border" style="margin:auto;" width="600px">Barcode Scanner</div>`
+                    );
+
+                    let html5QrcodeScanner; // Declare the scanner variable outside the click handler
+
+                    function onScanSuccess(decodedText, decodedResult) {
+                        // handle the scanned code as you like, for example:
+                        console.log(`Code matched = ${decodedText}`, decodedResult);
+
+                        // Set the value in an input field
+                        $('.trk-input').val(`TKR-${decodedText}`).addClass('text-success border border-success');
+
+                        // Stop the scanner
+                        // stopScanner();
+
+                         // Close the modal after a delay
+                        setTimeout(closeModal, 5000); // 5000 milliseconds (5 seconds)
+                        $("#scanned-form").submit();
+                    }
+
+                    function stopScanner() {
+                        if (html5QrcodeScanner) {
+                            console.log('Stopping scanner...');
+                            // Stop the scanner
+                            html5QrcodeScanner.stop().then(() => {
+                                // QR Code scanning is stopped.
+                                console.log('Scanner stopped');
+                            }).catch((err) => {
+                                // Handle stop error, if any
+                                console.error('Error stopping scanner:', err);
+                            });
+                        }
+                    }
+
+
+                    function closeModal(){
+                        $('#scanned-barcode-modal').modal('hide')
+                    }
+
+                    html5QrcodeScanner = new Html5QrcodeScanner(
+                        "reader",
+                        { fps: 10, qrbox: { width: 250, height: 100 } },
+                        /* verbose= */ false
+                    );
+                    html5QrcodeScanner.render(onScanSuccess);
+                });
+
 
                 // documents open
                 $('.view-document-btn').on('click', function(){

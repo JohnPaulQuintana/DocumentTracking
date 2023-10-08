@@ -105,7 +105,6 @@
 
         <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
         <script>
-
         $(document).ready(function(){
         // custom popups
             function notifyPopUps(message){
@@ -131,6 +130,25 @@
                         // toastr.clear();
                         toastr['info'](message);
             }
+            // department
+            function getDepartment(){
+                var csrfToken = $('#csrf-token').val();
+                    $.ajax({
+                        type: "GET",
+                        url: "/dept",
+                        headers: {
+                            "X-CSRF-TOKEN": csrfToken
+                        },
+                        success: function(res){
+                            $('.dept').text(res.department[0].office_name)
+                            console.log(res)
+                        },
+                        error: function(err){
+                            console.log(err)
+                        }
+                    })
+            }
+            
             function getNotification(){
                 // Get the CSRF token from the hidden input field
                     var csrfToken = $('#csrf-token').val();
@@ -178,7 +196,30 @@
                         }
                     });
             }
+
+            function getOnGoing(){
+                var csrfToken = $('#csrf-token').val();
+                    $.ajax({
+                        type: "GET",
+                        url: "/on",
+                        headers: {
+                            "X-CSRF-TOKEN": csrfToken
+                        },
+                        success: function(res){
+                            $('.on-card').text(res.response.forwarded)
+                            $('.accomplished').text(res.response.accomplished)
+                            $('.rejected').text(res.response.rejected)
+                            console.log(res)
+                        },
+                        error: function(err){
+                            console.log(err)
+                        }
+                    })
+            }
+            getDepartment()
+            getOnGoing()
             getNotification()
+           
             // Enable pusher logging - don't include this in production
             Pusher.logToConsole = true;
 
@@ -197,7 +238,7 @@
             })
         </script>
 
-        <script>
+        {{-- <script>
             $(document).ready(function(){
                 // $('#send-documents-btn').on('click',function(){
                 //     $('#send-documents').modal('show')
@@ -234,7 +275,7 @@
 
                 // })
             })
-        </script>
+        </script> --}}
     </body>
 
 </html>

@@ -9,6 +9,12 @@
     <!-- App favicon -->
     <link rel="shortcut icon" href="{{ asset('assets/images/favicon.ico') }}">
 
+    <!-- Plugin css -->
+    <link rel="stylesheet" href="{{ asset('assets/libs/@fullcalendar/core/main.min.css') }}" type="text/css">
+    <link rel="stylesheet" href="{{ asset('assets/libs/@fullcalendar/daygrid/main.min.css') }}" type="text/css">
+    <link rel="stylesheet" href="{{ asset('assets/libs/@fullcalendar/bootstrap/main.min.css') }}" type="text/css">
+    <link rel="stylesheet" href="{{ asset('assets/libs/@fullcalendar/timegrid/main.min.css') }}" type="text/css">
+
     {{-- toast css --}}
     <link rel="stylesheet" type="text/css" href="{{ asset('assets/libs/toastr/build/toastr.min.css') }}">
 
@@ -191,6 +197,17 @@
         <!-- toastr init -->
         <script src="{{ asset('assets/js/pages/toastr.init.js') }}"></script>
 
+        <!-- plugin js -->
+        <script src="{{ asset('assets/libs/moment/min/moment.min.js') }}"></script>
+        <script src="{{ asset('assets/libs/jquery-ui-dist/jquery-ui.min.js') }}"></script>
+        <script src="{{ asset('assets/libs/@fullcalendar/core/main.min.js') }}"></script>
+        <script src="{{ asset('assets/libs/@fullcalendar/bootstrap/main.min.js') }}"></script>
+        <script src="{{ asset('assets/libs/@fullcalendar/daygrid/main.min.js') }}"></script>
+        <script src="{{ asset('assets/libs/@fullcalendar/timegrid/main.min.js') }}"></script>
+        <script src="{{ asset('assets/libs/@fullcalendar/interaction/main.min.js') }}"></script>
+
+        <!-- Calendar init -->
+        <script src="{{ asset('assets/js/pages/calendar.init.js') }}"></script>
         <!-- App js -->
         <script src="{{ asset('assets/js/app.js') }}"></script>
 

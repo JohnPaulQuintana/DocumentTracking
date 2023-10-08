@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Log;
+use App\Models\Office;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +14,10 @@ class DepartmentController extends Controller
         return view('departments.components.contents.home')->with(['logs'=>$this->LogsInfo()]);
     }
 
+    public function getDept(){
+        $department = Office::where('id',Auth::user()->office_id)->get();
+        return response()->json(['department'=>$department]);
+    }
     public function documentProgress(){
        
         return view('departments.components.contents.tracking-page')->with(['logs'=>$this->LogsInfo(), 'departments'=>$this->availableDepartments()]);
