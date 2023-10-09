@@ -60,6 +60,36 @@
         @include('departments.components.parts.card')
     </div><!-- end row -->
 
+    {{-- calendar events --}}
+
+    <div class="row mb-4">
+        <div class="col-xl-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    {{-- <button class="btn font-16 btn-primary waves-effect waves-light w-100">
+                        Event's list
+                    </button> --}}
+
+                    <div id="external-events">
+                        <br>
+                        <h5 class="text-info text-center">Event List's</h5>
+                        <div class="ready-events" style="overflow-y: auto;max-height:400px;">
+                            
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div> <!-- end col-->
+        <div class="col-xl-9">
+            <div class="card mb-0">
+                <div class="card-body">
+                    <div class="h-50" id="calendar" style="height: 30vh;"></div>
+                </div>
+            </div>
+        </div> <!-- end col -->
+    </div> <!-- end row-->
+    <div style='clear:both'></div>
     {{-- <div class="row">
         <div class="col-xl-12">
             <div class="card">
@@ -181,7 +211,7 @@
         <script src="{{ asset('assets/libs/@fullcalendar/interaction/main.min.js') }}"></script>
 
         <!-- Calendar init -->
-        {{-- <script src="{{ asset('assets/js/pages/calendar.init.js') }}"></script> --}}
+        <script src="{{ asset('assets/js/pages/calendar.dept.js') }}"></script>
 
         <!-- App js -->
         <script src="assets/js/app.js"></script>

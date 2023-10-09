@@ -38,14 +38,44 @@
             
         var c = [];
 
+        function convertToAMPM(timeString) {
+            const [hours, minutes] = timeString.split(':');
+            let ampm = 'AM';
+            let hour = parseInt(hours);
+        
+            if (hour >= 12) {
+                ampm = 'PM';
+                if (hour > 12) {
+                    hour -= 12;
+                }
+            }
+        
+            return `${hour}:${minutes} ${ampm}`;
+        }
+
         function readyEvents(E){
             // Clear the existing content of '.ready-events'
             $('.ready-events').html('');
             var rEvents = '';
             E.forEach(element => {
+                console.log(element)
+                var classes = element.className.split('-')
                 rEvents += `
-                    <div class="external-event fc-event ${element.className}" data-class="${element.className}">
-                        <i class="mdi mdi-checkbox-blank-circle font-size-11 me-2"></i>${element.title}
+                    
+                    <div class="col-lg-12">
+                        <div class="card border border-${classes[1]}">
+                            <div class="card-header bg-transparent border-${classes[1]}">
+                                <h6 class="my-0 text-${classes[1]}"><i class="mdi mdi-bullseye-arrow me-3"></i>${element.title}</h6>
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">Active Event's</h5>
+                                <p class="card-text">${element.notes}.</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <p class="m-0 p-1 text-white border rounded ${element.className}">${element.start}</p>
+                                    <span class="p-1 border rounded text-white ${element.className}">${convertToAMPM(element.time)}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 `
             });
@@ -85,15 +115,15 @@
          var v =
                 (document.getElementById("external-events"),
                 document.getElementById("calendar"));
-        function u(e) {
-            l.modal("show"),
-                a.removeClass("was-validated"),
-                a[0].reset(),
-                g("#event-title").val(),
-                g("#event-category").val(),
-                t.text("Add Event"),
-                (r = e);
-        }
+        // function u(e) {
+        //     l.modal("show"),
+        //         a.removeClass("was-validated"),
+        //         a[0].reset(),
+        //         g("#event-title").val(),
+        //         g("#event-category").val(),
+        //         t.text("Add Event"),
+        //         (r = e);
+        // }
         var m = new FullCalendar.Calendar(v, {
             plugins: ["bootstrap", "interaction", "dayGrid", "timeGrid"],
             editable: !0,
@@ -107,21 +137,21 @@
                 center: "title",
                 right: "dayGridMonth,timeGridWeek,timeGridDay,listMonth",
             },
-            eventClick: function (e) {
-                le.modal("show"),
-                    a[0].reset(),
-                    (i = e.event),
-                    console.log(e.event)
-                    g("#event-id-edit").val(i.id),
-                    // g("#event-start-edit").val(i.start),
-                    g("#event-title-edit").val(i.title),
-                    g("#event-time-edit").val(i.extendedProps.time),
-                    g("#event-notes-edit").val(i.extendedProps.notes),
-                    g("#event-category-edit").val(i.classNames[0]),
-                    (r = null),
-                    t.text("Edit Event"),
-                    (r = null);
-            },
+            // eventClick: function (e) {
+            //     le.modal("show"),
+            //         a[0].reset(),
+            //         (i = e.event),
+            //         console.log(e.event)
+            //         g("#event-id-edit").val(i.id),
+            //         // g("#event-start-edit").val(i.start),
+            //         g("#event-title-edit").val(i.title),
+            //         g("#event-time-edit").val(i.extendedProps.time),
+            //         g("#event-notes-edit").val(i.extendedProps.notes),
+            //         g("#event-category-edit").val(i.classNames[0]),
+            //         (r = null),
+            //         t.text("Edit Event"),
+            //         (r = null);
+            // },
             dateClick: function (e) {
                 u(e);
             },

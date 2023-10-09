@@ -2,7 +2,7 @@
 <html lang="en">
 
     <head>
-        
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         @yield('head')
         <!-- Scripts -->
         @vite(['resources/js/app.js'])
@@ -44,7 +44,8 @@
                 <!-- End Page-content -->
                
                 {{-- modals --}}
-                @include('admin.components.modals.modal')
+                @include('admin.components.modals.event')
+                @include('admin.components.modals.event-edit')
 
                 <footer class="footer">
                     @include('admin.components.footer.footer')

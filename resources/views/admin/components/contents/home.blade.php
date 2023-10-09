@@ -9,6 +9,12 @@
     <!-- App favicon -->
     <link rel="shortcut icon" href="{{ asset('assets/images/favicon.ico') }}">
 
+    <!-- Plugin css -->
+    <link rel="stylesheet" href="{{ asset('assets/libs/@fullcalendar/core/main.min.css') }}" type="text/css">
+    <link rel="stylesheet" href="{{ asset('assets/libs/@fullcalendar/daygrid/main.min.css') }}" type="text/css">
+    <link rel="stylesheet" href="{{ asset('assets/libs/@fullcalendar/bootstrap/main.min.css') }}" type="text/css">
+    <link rel="stylesheet" href="{{ asset('assets/libs/@fullcalendar/timegrid/main.min.css') }}" type="text/css">
+
     {{-- toast css --}}
     <link rel="stylesheet" type="text/css" href="{{ asset('assets/libs/toastr/build/toastr.min.css') }}">
 
@@ -68,101 +74,39 @@
         @include('admin.components.parts.card')
     </div><!-- end row -->
 
-    <div class="row">
-        <div class="col-xl-12">
-            <div class="card">
+    {{-- calendar events --}}
+
+    <div class="row mb-4">
+        <div class="col-xl-3">
+            <div class="card h-100">
                 <div class="card-body">
+                    <button type="button" class="btn font-16 btn-primary waves-effect waves-light w-100"
+                        id="btn-new-event" data-bs-toggle="modal" data-bs-target="#event-modal">
+                        Create New Event
+                    </button>
 
-                    <div class="dropdown float-end">
-                        <a href="#" class="dropdown-toggle arrow-none card-drop" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="mdi mdi-dots-vertical"></i>
-                        </a>
-
-                        <div class="dropdown-menu dropdown-menu-end">
-                            <!-- item-->
-                            <a href="javascript:void(0);" class="dropdown-item">Sales Report</a>
-                            <!-- item-->
-                            <a href="javascript:void(0);" class="dropdown-item">Export Report</a>
-                            <!-- item-->
-                            <a href="javascript:void(0);" class="dropdown-item">Profit</a>
-                            <!-- item-->
-                            <a href="javascript:void(0);" class="dropdown-item">Action</a>
+                    <div id="external-events">
+                        <br>
+                        <p class="text-muted">Events history</p>
+                        <div class="ready-events" style="overflow-y: auto;height:350px;">
+                            
                         </div>
                     </div>
+                    
+                </div>
+            </div>
+        </div> <!-- end col-->
+        <div class="col-xl-9">
+            <div class="card mb-0">
+                <div class="card-body">
+                    <div class="h-50" id="calendar" style="height: 30vh;"></div>
+                </div>
+            </div>
+        </div> <!-- end col -->
+    </div> <!-- end row-->
+    <div style='clear:both'></div>
 
-                    <h4 class="card-title mb-4">Latest Documents</h4>
-                    {{-- {{ $logs }} --}}
-                    <div class="table-responsive">
-                        <table class="table table-centered mb-0 align-middle table-hover table-nowrap">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Tracking No.</th>
-                                    <th>Requested To</th>
-                                    <th>Description</th>
-                                    <th>Status</th>
-                                    <th>Date</th>
-                                    <th>Time</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead><!-- end thead -->
-                            <tbody>
-                                @foreach ($logs as $log)
-                                    <tr>
-                                        <td><h6 class="mb-0"><i class="ri-checkbox-blank-circle-fill font-size-10 text-success align-middle me-2"></i>{{ $log->trk_id }}</h6></td>
-                                        <td>{{ $log->user_department }}</td>
-                                        <td>{{ $log->description }}</td>
-                                        <td>
-                                            @switch($log->status)
-                                                @case("forwarded")
-                                                    <!-- Display something when status is 1 -->
-                                                    <span class="badge bg-info p-2"><b>{{ $log->status }}</b></span>
-                                                    @break
-                                                @case("rejected")
-                                                    <!-- Display something when status is 2 -->
-                                                    <span class="badge bg-danger p-2"><b>{{ $log->status }}</b></span>
-                                                    @break
-                                                @case("on-going")
-                                                    <!-- Display something when status is 2 -->
-                                                    <span class="badge p-2"><b>{{ $log->status }}</b></span>
-                                                    @break
-                                                @case("done")
-                                                    <!-- Display something when status is 2 -->
-                                                    <span class="badge bg-success p-2"><b>{{ $log->status }}</b></span>
-                                                    @break
-                                                @default
-                                                    <!-- Display something for other status values -->
-                                                    Other Status Content
-                                            @endswitch
-                                        </td>
-                                        <td>{{ $log->formatted_created_at }}</td>
-                                        <td>{{ $log->formatted_time }}</td>
-                                        <td width="50px">
-                                            {{-- <span class="">
-                                                <a href="#" id="recieved-documents" class="ri-checkbox-circle-line text-white font-size-18 p-2 btn btn-success" data-trk-id="{{ $log->trk_id }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Recieved Documents"></a>
-                                            </span>
-                                            <span class="">
-                                                <a href="#" id="reject-documents" class="ri-close-line text-white font-size-18 btn btn-danger p-2" data-trk-id="{{ $log->trk_id }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Reject Documents"></a>
-                                            </span> --}}
-                                            <span class="">
-                                                <a href="#" id="view-documents-btn" class="ri-eye-line text-white font-size-18 btn btn-info p-2" data-trk-id="{{ $log->trk_id }}" data-bs-toggle="tooltip" data-bs-placement="top" title="View Documents"></a>
-                                            </span>
-                                            <span class="">
-                                                {{-- <a href="#" class="ri-send-plane-line text-white font-size-18 btn btn-info p-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Forward Documents"></a> --}}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                                
-                                <!-- end -->
-                                
-                            </tbody><!-- end tbody -->
-                        </table> <!-- end table -->
-                    </div>
-                </div><!-- end card -->
-            </div><!-- end card -->
-        </div>
-        <!-- end col -->
-    </div>
+    
 
 @endsection
 
@@ -197,12 +141,24 @@
         <script src="{{ asset('assets/libs/bootstrap-maxlength/bootstrap-maxlength.min.js') }}"></script>
         <script src="{{ asset('assets/js/pages/form-advanced.init.js') }}"></script>
 
-        <script src="{{ asset('assets/js/pages/dashboard.init.js') }}"></script>
+        {{-- <script src="{{ asset('assets/js/pages/dashboard.init.js') }}"></script> --}}
 
         <!-- toastr plugin -->
         <script src="{{ asset('assets/libs/toastr/build/toastr.min.js') }}"></script>
         <!-- toastr init -->
         <script src="{{ asset('assets/js/pages/toastr.init.js') }}"></script>
+
+        <!-- plugin js -->
+        <script src="{{ asset('assets/libs/moment/min/moment.min.js') }}"></script>
+        <script src="{{ asset('assets/libs/jquery-ui-dist/jquery-ui.min.js') }}"></script>
+        <script src="{{ asset('assets/libs/@fullcalendar/core/main.min.js') }}"></script>
+        <script src="{{ asset('assets/libs/@fullcalendar/bootstrap/main.min.js') }}"></script>
+        <script src="{{ asset('assets/libs/@fullcalendar/daygrid/main.min.js') }}"></script>
+        <script src="{{ asset('assets/libs/@fullcalendar/timegrid/main.min.js') }}"></script>
+        <script src="{{ asset('assets/libs/@fullcalendar/interaction/main.min.js') }}"></script>
+
+        <!-- Calendar init -->
+        <script src="{{ asset('assets/js/pages/calendar.init.js') }}"></script>
 
         <!-- App js -->
         <script src="{{ asset('assets/js/app.js') }}"></script>

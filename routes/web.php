@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\EventController;
 use App\Http\Controllers\FileUploadController;
 use App\Http\Controllers\ModalController;
 use App\Http\Controllers\NotificationController;
@@ -58,6 +59,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/notification',[NotificationController::class,'getNotification'])->name('notify');
     // on
     Route::get('/on',[ReportController::class,'getOnGoingDocuments'])->name('on');
+
+    // events
+    Route::post('/events',[EventController::class,'pushEvents'])->name('events.push');
+    Route::post('/delete-event',[EventController::class,'deleteEvents'])->name('events.delete');
+    Route::get('/fetch-events',[EventController::class,'FetchEvents'])->name('events.fetch');
+    Route::post('/update-events',[EventController::class,'updateEvents'])->name('events.update');
+    Route::post('/edit-events',[EventController::class,'EditEvents'])->name('events.edit');
+
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
