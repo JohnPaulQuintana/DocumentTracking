@@ -65,7 +65,7 @@
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
                     <li class="breadcrumb-item"><a href="javascript: void(0);">Document Tracking</a></li>
-                    <li class="breadcrumb-item active">Office's</li>
+                    <li class="breadcrumb-item active">History Log's</li>
                 </ol>
             </div>
 
@@ -85,67 +85,49 @@
 
                         <div class="dropdown-menu dropdown-menu-end">
                             <!-- item-->
-                            <a id="trigger-office" href="javascript:void(0);" class="dropdown-item text-success">New Office</a>
+                            {{-- <a id="trigger-office" href="javascript:void(0);" class="dropdown-item text-success">New Office</a> --}}
                             <!-- item-->
                             <a  href="{{ route('administrator.dashboard') }}" class="dropdown-item text-danger">Back to Dashboard</a>
                         </div>
                     </div>
 
-                    <h4 class="card-title mb-4">Office List</h4>
-                    {{-- {{ $logs }} --}}
+                    <h4 class="card-title mb-4">History Logs</h4>
+                    {{-- {{ $history }} --}}
                     <div class="table-responsive">
-                        <table class="table table-centered mb-0 align-middle table-hover table-nowrap office-table">
+                        <table class="table table-centered mb-0 align-middle table-hover table-nowrap history-table">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Office Name</th>
-                                    <th>Office Description</th>
-                                    <th>Office Head</th>
-                                    <th>Office Type</th>
-                                    <th>Status</th>
-                                    <th>Date Created</th>
-                                    <th>Action</th>
+                                    <th class="text-center" colspan="7">History Of Documents</th>
                                 </tr>
                             </thead><!-- end thead -->
                             <tbody>
                                 
-                                @foreach ($offices as $office)
-                                    <tr>
-                                        <td><h6 class="mb-0"><i class="ri-checkbox-blank-circle-fill font-size-10 text-success align-middle me-2"></i>{{ $office->office_name }}</h6></td>
-                                        <td>{{ $office->office_description }}</td>
-                                        <td>{{ $office->office_head }}</td>
-                                        <td>{{ $office->office_type }}</td>
+                               @foreach ($history as $log)
+                                   <tr>
                                         <td>
-                                            @switch($office->status)
-                                                @case("forwarded")
-                                                    <!-- Display something when status is 1 -->
-                                                    <span class="badge bg-info p-2"><b>{{ $office->status }}</b></span>
-                                                    @break
-                                                @case("rejected")
-                                                    <!-- Display something when status is 2 -->
-                                                    <span class="badge bg-danger p-2"><b>{{ $office->status }}</b></span>
-                                                    @break
-                                                @case("on-going")
-                                                    <!-- Display something when status is 2 -->
-                                                    <span class="badge p-2"><b>{{ $office->status }}</b></span>
-                                                    @break
-                                                @case("active")
-                                                    <!-- Display something when status is 2 -->
-                                                    <span class="badge bg-success p-2"><b>{{ $office->status }}</b></span>
-                                                    @break
-                                                @default
-                                                    <!-- Display something for other status values -->
-                                                    Other Status Content
-                                            @endswitch
+                                            @if ($log->trk_id != null)
+                                                <h3 class="badge bg-success p-2"><b>TRK-{{ $log->trk_id }}</b></h3>
+            
+                                            @else
+                                               <span class="badge bg-danger p-2"><b>{{ __('Not Generated') }}</b></span>
+                                            @endif
+                                           
                                         </td>
-                                        <td>{{ $office->created_at }}</td>
-                                        {{-- <td>{{ $log->formatted_time }}</td> --}}
-                                        <td width="50px">
-                                            <span class="">
-                                                <a href="{{ route('administrator.dashboard.offices.user', ['office_id' => $office->id]) }}" id="view-users-btn" class="ri-eye-line text-white font-size-18 btn btn-info p-2" data-office-id="{{ $office->id }}" data-bs-toggle="tooltip" data-bs-placement="top" title="View Department Users"></a>
-                                            </span>
+                                        <td>{{ $log->name}}</td>
+                                        <td>{{ $log->purpose}}</td>
+                                        <td>
+                                            @if ($log->scanned != 0)
+                                                <h3 class="badge bg-success p-2">{{ __('scanned')}}</h3>
+                                            @else
+                                            <h3 class="badge bg-danger p-2">{{ __('not-scanned')}}</h3>
+                                            @endif
+                                            
                                         </td>
-                                    </tr>
-                                @endforeach
+                                        <td>{{ $log->status}}</td>
+                                        <td>{{ $log->notes}}</td>
+                                        <td>{{ $log->created_at}}</td>
+                                   </tr>
+                               @endforeach
                                 
                                 <!-- end -->
                                 
@@ -208,7 +190,7 @@
                     var searchText = $(this).val().toLowerCase();
 
                     // Loop through each list item and hide/show based on the search text
-                    $('.office-table tbody tr').each(function () {
+                    $('.history-table tbody tr').each(function () {
                         var row = $(this);
                         var rowMatches = false;
                         // Loop through each cell in the row
@@ -230,12 +212,6 @@
                         }
                     });
                 });
-
-                $('#trigger-office').on('click',function(){
-                    $('#new-office').modal('show')
-                    // var trkId = $(this).data("trk-id");
-                    // $('#data-trk-id').val(trkId)
-                })
             })
         </script>
         {{-- // notification --}}

@@ -130,7 +130,7 @@
                                 response.notifications.forEach(notif => {
                                     notifyPopUps(`You have a notification from ${notif.notification_from_name}`)
                                     notifHtml += `
-                                        <a href="" class="text-reset notification-item">
+                                        <a href="" class="text-reset notification-item" data-id="${notif.notification_from_id}" data-trk="${notif.notification_trk}">
                                             <div class="d-flex">
                                                 <img src="{{ asset('assets/images/users/default-user.png') }}"
                                                     class="me-3 rounded-circle avatar-xs" alt="user-pic">
@@ -146,6 +146,11 @@
                                         `
                                 });
                                 $('.notif-container').html(notifHtml)
+                                
+                                $('.notification-item').on("click", function(){
+                                //    alert($(this).data('id'))
+                                   updateNotif($(this).data('id'), $(this).data('trk'));
+                                })
                             } else {
                                 // The response is empty or falsy
                                 console.log("Response is empty or falsy:", response);
@@ -171,6 +176,8 @@
                             $('.on-card').text(res.response.forwarded)
                             $('.accomplished').text(res.response.accomplished)
                             $('.rejected').text(res.response.rejected)
+                            $('.assigned').text(res.response.assigned)
+
                             console.log(res)
                         },
                         error: function(err){
@@ -197,7 +204,59 @@
                 window.location.reload();
             });
 
+            function updateNotif($id, $trk){
+                    var csrfToken = $('meta[name="csrf-token"]').attr('content');;
+                    // alert(csrfToken)
+                    $.ajax({
+                        type: "POST",
+                        url: "/notification-update",
+                        headers: {
+                            "X-CSRF-TOKEN": csrfToken
+                        },
+                        data: {'id':$id},
+                        success: function (response) {
+                            // console.log(response)
+                             // Redirect to the desired URL using JavaScript
+                           
+                            if($trk !== null){
+                                window.location.href = '/request-documents?search_id=' + $trk;
+                            }
+                        },
+                        error: function(err){
+                            console.log(err)
+                        }
+                    })
+                }
+
+                function updateTime() {
+                    const currentTime = new Date();
+                    const year = currentTime.getFullYear();
+                    const month = currentTime.getMonth() + 1; // Months are zero-indexed
+                    const day = currentTime.getDate();
+                    const hours = currentTime.getHours();
+                    const minutes = currentTime.getMinutes();
+                    const seconds = currentTime.getSeconds();
+                    const ampm = hours >= 12 ? 'PM' : 'AM';
+
+                    // Format the time
+                    const formattedTime = `${hours}:${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds} ${ampm}`;
+
+                    // Format the date
+                    const formattedDate = `${year}-${month < 10 ? '0' : ''}${month}-${day < 10 ? '0' : ''}${day}`;
+
+                    // Use .text() to set the text content of elements with the class 'current-time'
+                    $('.current-date').text(formattedDate);
+                    $('.current-time').text(formattedTime);
+                }
+
+                // Update the time immediately and then every 1 second (1000 milliseconds)
+                updateTime();
+                setInterval(updateTime, 1000);
+
+
             })
+
+            
         </script>
 
         {{-- <script>
