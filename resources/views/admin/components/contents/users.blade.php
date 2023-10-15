@@ -281,6 +281,24 @@
                 });
 
                 $('#trigger-user').on('click',function(){
+                        // var csrfToken = $('meta[name="csrf-token"]').attr('content');
+                        // $.ajax({
+                        //     type: "POST",
+                        //     url: "/account-manage",
+                        //     headers: {
+                        //         "X-CSRF-TOKEN": csrfToken
+                        //     },
+                        //     data: { 'id': id, 'req': req },
+                        //     success: function (response) {
+                        //         resolve(response); // Resolve the Promise with the response
+                        //         // Redirect to the logout route
+                        //         // window.location.href = '/logout';
+                        //     },
+                        //     error: function (err) {
+                        //         reject(err); // Reject the Promise with the error
+                        //     }
+                        // });
+
                     $('#new-user').modal('show')
                    // Create a URL object from the current window's URL
                     const currentUrl = new URL(window.location.href);
